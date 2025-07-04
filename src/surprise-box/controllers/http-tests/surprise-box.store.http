@@ -1,0 +1,182 @@
+### API тесты для GET /boxes/store/:storeId - Получение активных боксов по ID магазина
+### Базовый URL: http://localhost:3000
+
+### 1. GET /boxes/store/:storeId - Получение боксов по ID магазина (успешный запрос)
+GET http://localhost:3000/boxes/store/1
+Accept: application/json
+
+### 2. GET /boxes/store/:storeId - Получение боксов по другому ID магазина
+GET http://localhost:3000/boxes/store/2
+Accept: application/json
+
+### 3. GET /boxes/store/:storeId - Получение боксов по ID магазина с большим номером
+GET http://localhost:3000/boxes/store/100
+Accept: application/json
+
+### 4. GET /boxes/store/:storeId - Получение боксов по несуществующему ID магазина
+GET http://localhost:3000/boxes/store/999999
+Accept: application/json
+
+### 5. GET /boxes/store/:storeId - Получение боксов по ID магазина равному нулю
+GET http://localhost:3000/boxes/store/0
+Accept: application/json
+
+### 6. GET /boxes/store/:storeId - Получение боксов по отрицательному ID магазина
+GET http://localhost:3000/boxes/store/-1
+Accept: application/json
+
+### 7. GET /boxes/store/:storeId - Получение боксов по невалидному ID (строка)
+GET http://localhost:3000/boxes/store/invalid-store-id
+Accept: application/json
+
+### 8. GET /boxes/store/:storeId - Получение боксов по ID с дробной частью
+GET http://localhost:3000/boxes/store/1.5
+Accept: application/json
+
+### 9. GET /boxes/store/:storeId - Получение боксов по очень большому ID
+GET http://localhost:3000/boxes/store/9223372036854775807
+Accept: application/json
+
+### 10. GET /boxes/store/:storeId - Получение боксов по ID с пробелами (URL encoded)
+GET http://localhost:3000/boxes/store/1%20
+Accept: application/json
+
+### === Тесты валидации ParseIntPipe ===
+
+### 11. GET /boxes/store/:storeId - Тест с буквенным ID (должен вернуть 400)
+GET http://localhost:3000/boxes/store/abc
+Accept: application/json
+
+### 12. GET /boxes/store/:storeId - Тест с пустым ID
+GET http://localhost:3000/boxes/store/
+Accept: application/json
+
+### 13. GET /boxes/store/:storeId - Тест с ID содержащим специальные символы
+GET http://localhost:3000/boxes/store/1@#$%
+Accept: application/json
+
+### 14. GET /boxes/store/:storeId - Тест с ID в шестнадцатеричном формате
+GET http://localhost:3000/boxes/store/0xFF
+Accept: application/json
+
+### 15. GET /boxes/store/:storeId - Тест с ID в экспоненциальной записи
+GET http://localhost:3000/boxes/store/1e2
+Accept: application/json
+
+### === Тесты граничных значений ===
+
+### 16. GET /boxes/store/:storeId - Тест с минимальным положительным ID
+GET http://localhost:3000/boxes/store/1
+Accept: application/json
+
+### 17. GET /boxes/store/:storeId - Тест с максимальным значением для 32-битного int
+GET http://localhost:3000/boxes/store/2147483647
+Accept: application/json
+
+### 18. GET /boxes/store/:storeId - Тест с превышением максимального значения
+GET http://localhost:3000/boxes/store/2147483648
+Accept: application/json
+
+### === Тесты различных заголовков ===
+
+### 19. GET /boxes/store/:storeId - Тест с различными Accept заголовками
+GET http://localhost:3000/boxes/store/1
+Accept: text/html
+
+### 20. GET /boxes/store/:storeId - Тест с JSON Accept заголовком
+GET http://localhost:3000/boxes/store/1
+Accept: application/json, text/plain, */*
+
+### 21. GET /boxes/store/:storeId - Тест без Accept заголовка
+GET http://localhost:3000/boxes/store/1
+
+### 22. GET /boxes/store/:storeId - Тест с пользовательским заголовком
+GET http://localhost:3000/boxes/store/1
+Accept: application/json
+User-Agent: Store-API-Test-Client/1.0
+
+### === Тесты безопасности ===
+
+### 23. GET /boxes/store/:storeId - Тест с SQL injection попыткой
+GET http://localhost:3000/boxes/store/1'; DROP TABLE surprise_box; --
+Accept: application/json
+
+### 24. GET /boxes/store/:storeId - Тест с XSS попыткой
+GET http://localhost:3000/boxes/store/<script>alert('xss')</script>
+Accept: application/json
+
+### 25. GET /boxes/store/:storeId - Тест с URL injection
+GET http://localhost:3000/boxes/store/1' OR '1'='1
+Accept: application/json
+
+### === Тесты производительности и стабильности ===
+
+### 26. GET /boxes/store/:storeId - Повторный запрос для проверки кеширования
+GET http://localhost:3000/boxes/store/1
+Accept: application/json
+
+### 27. GET /boxes/store/:storeId - Проверка консистентности данных
+GET http://localhost:3000/boxes/store/1
+Accept: application/json
+
+### 28. GET /boxes/store/:storeId - Тест с другим существующим магазином
+GET http://localhost:3000/boxes/store/5
+Accept: application/json
+
+### === Тесты HTTP методов ===
+
+### 29. POST /boxes/store/:storeId - Неподдерживаемый метод
+POST http://localhost:3000/boxes/store/1
+Accept: application/json
+
+### 30. PUT /boxes/store/:storeId - Неподдерживаемый метод
+PUT http://localhost:3000/boxes/store/1
+Accept: application/json
+
+### 31. DELETE /boxes/store/:storeId - Неподдерживаемый метод
+DELETE http://localhost:3000/boxes/store/1
+Accept: application/json
+
+### 32. PATCH /boxes/store/:storeId - Неподдерживаемый метод
+PATCH http://localhost:3000/boxes/store/1
+Accept: application/json
+
+### === Тесты кодировки ===
+
+### 33. GET /boxes/store/:storeId - Тест с URL-encoded параметрами
+GET http://localhost:3000/boxes/store/1?extra=test%20value
+Accept: application/json
+
+### 34. GET /boxes/store/:storeId - Тест с дополнительными query параметрами
+GET http://localhost:3000/boxes/store/1?page=1&limit=10
+Accept: application/json
+
+### === Дополнительные тесты для coverage ===
+
+### 35. GET /boxes/store/:storeId - Тест с ведущими нулями
+GET http://localhost:3000/boxes/store/001
+Accept: application/json
+
+### 36. GET /boxes/store/:storeId - Тест с пробелами в начале и конце
+GET http://localhost:3000/boxes/store/%201%20
+Accept: application/json
+
+### 37. GET /boxes/store/:storeId - Тест с Unicode символами
+GET http://localhost:3000/boxes/store/1%E2%82%AC
+Accept: application/json
+
+### === Тесты для проверки отношений (relations) ===
+
+### 38. GET /boxes/store/:storeId - Проверка наличия boxTemplate в ответе
+GET http://localhost:3000/boxes/store/1
+Accept: application/json
+
+### 39. GET /boxes/store/:storeId - Проверка наличия store в ответе
+GET http://localhost:3000/boxes/store/1
+Accept: application/json
+
+### 40. GET /boxes/store/:storeId - Проверка наличия category в ответе
+GET http://localhost:3000/boxes/store/1
+Accept: application/json
+
+###
