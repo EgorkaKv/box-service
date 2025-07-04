@@ -1,5 +1,6 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { SurpriseBoxService } from '../services/surprise-box.service';
+import { SurpriseBox } from '../entities/surprise-box.entity';
 
 @Controller('boxes')
 export class SurpriseBoxController {
@@ -39,5 +40,12 @@ export class SurpriseBoxController {
   async getBoxById(@Param('boxId') boxId: string) {
     // Вызов сервиса для получения деталей конкретного бокса
     return this.surpriseBoxService.getBoxById(Number(boxId));
+  }
+
+  @Get('store/:storeId')
+  async getActiveBoxesByStore(
+    @Param('storeId', ParseIntPipe) storeId: number,
+  ): Promise<SurpriseBox[]> {
+    return this.surpriseBoxService.getActiveBoxesByStore(storeId);
   }
 }

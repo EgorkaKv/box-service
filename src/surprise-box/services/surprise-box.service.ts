@@ -52,4 +52,11 @@ export class SurpriseBoxService {
     const box = await this.surpriseBoxRepository.findById(boxId);
     return !!box;
   }
+
+  /**
+   * Получить активные боксы по идентификатору магазина
+   */
+  async getActiveBoxesByStore(storeId: number): Promise<SurpriseBox[]> {
+    return this.surpriseBoxRepository.findActiveBoxesByStore(storeId);
+  }
 }

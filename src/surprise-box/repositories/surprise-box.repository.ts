@@ -81,4 +81,17 @@ export class SurpriseBoxRepository {
       .andWhere('box.sale_end_time > NOW()')
       .getMany();
   }
+
+  async findActiveBoxesByStore(storeId: number): Promise<SurpriseBox[]> {
+    return this.surpriseBoxRepository.find({
+      where: {
+        storeId,
+        status: BoxStatus.ACTIVE,
+      },
+      relations: ['boxTemplate', 'store', 'category'],
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
 }
