@@ -1,9 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
-import { Order } from '../order/entities/order.entity';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Index, Check } from 'typeorm';
+import { Order } from '@order/entities/order.entity';
 
 @Entity('review')
 @Index("idx_review_order_id", ["orderId"])
 @Index("idx_review_rating", ["rating"])
+@Check("rating >= 1 AND rating <= 5")
 export class Review {
   @PrimaryGeneratedColumn({type:'bigint'})
   id: number;
@@ -15,9 +16,7 @@ export class Review {
   @JoinColumn({ name: 'order_id' })
   order: Order;
 
-  @Column({type:'smallint',
-    check: 'rating >= 1 AND rating <= 5' 
-  })
+  @Column({ type: 'smallint' })
   rating: number;
 
   @Column({ name: 'review_comment', type: 'text', nullable: true })

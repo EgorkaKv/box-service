@@ -9,11 +9,11 @@ import {
   Index,
   OneToMany
 } from 'typeorm';
-import { BoxTemplate } from '../box-template/box-template.entity';
-import { Store } from '../store/entities/store.entity';
-import { Category } from '../category/category.entity';
-import { Customer } from '../customer/customer.entity';
-import { Order } from '../order/entities/order.entity';
+import { BoxTemplate } from '@box-template/entities/box-template.entity';
+import { Store } from '@store/entities/store.entity';
+import { Category } from '@category/entities/category.entity';
+import { Customer } from '@customer/entities/customer.entity';
+import { Order } from '@order/entities/order.entity';
 
 export enum BoxStatus {
   DRAFT = 'draft',
@@ -21,16 +21,19 @@ export enum BoxStatus {
   RESERVED = 'reserved',
   SOLD = 'sold',
   EXPIRED = 'expired',
-  CANCELED = 'canceled'
+  CANCELLED = 'cancelled'
 }
 
 @Entity('surprise_box')
-@Index("idx_surprise_box_geo_active", {where: "status IN ('active')" }) // GIST индекс создается в БД напрямую
+@Index("idx_surprise_box_geo_active", ["storeLocation"], {
+  where: "status IN ('active')",
+  spatial: true // Для геопространственных индексов
+})
 @Index("idx_surprise_box_city_status", ["storeCity", "status"], { where: "status IN ('active')" })
 @Index("idx_surprise_box_store_id", ["storeId", "status"])
 @Index("idx_surprise_box_reserved_by", ["id", "reservedBy"], { unique: true, where: "status = 'reserved' AND reserved_by IS NOT NULL" })
 export class SurpriseBox {
-  @PrimaryGeneratedColumn('identity', { type: 'bigint' })
+  @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
   // Связи с другими таблицами
@@ -65,13 +68,8 @@ export class SurpriseBox {
   @Column({ name: 'store_city', type: 'text' })
   storeCity: string;
 
-  @Column({
-    name: 'store_location',
-    type: 'geometry',
-    spatialFeatureType: 'Point',
-    srid: 4326
-  })
-  storeLocation: any; // Геометрический тип данных
+  @Column({ name: 'store_location', type: 'geometry', spatialFeatureType: 'Point', srid: 4326 })
+  storeLocation: object;
 
   // Данные из шаблона
   @Column({ type: 'text' })
@@ -105,36 +103,28 @@ export class SurpriseBox {
   @Column({ name: 'sale_end_time', type: 'timestamp' })
   saleEndTime: Date;
 
-  // Статус и резервация
-  @Column({
-    name: 'status',
-    type: 'enum',
-    enum: BoxStatus,
-    default: BoxStatus.DRAFT
-  })
+  @Column({ name: 'status', type: 'enum', enum: BoxStatus, default: BoxStatus.DRAFT })
   status: BoxStatus;
 
   @Column({ name: 'reserved_by', type: 'bigint', nullable: true })
-  reservedBy: number | null;
+  reservedBy: number;
 
   @ManyToOne(() => Customer, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'reserved_by' })
-  customer: Customer;
+  reservedByCustomer: Customer;
 
   @Column({ name: 'reserved_at', type: 'timestamp', nullable: true })
-  reservedAt: Date | null;
+  reservedAt: Date;
 
   @Column({ name: 'reservation_expires_at', type: 'timestamp', nullable: true })
-  reservationExpiresAt: Date | null;
+  reservationExpiresAt: Date;
 
-  // Метаданные
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
 
   @OneToMany(() => Order, (order) => order.surpriseBox)
   orders: Order[];
 }
-

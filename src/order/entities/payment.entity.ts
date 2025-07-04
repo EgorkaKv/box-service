@@ -28,7 +28,7 @@ export enum PaymentMethod {
 
 @Entity('payment')
 export class Payment {
-  @PrimaryGeneratedColumn('bigint')
+  @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
   @Column({ name: 'order_id', type: 'bigint' })
@@ -48,21 +48,16 @@ export class Payment {
   @Column({ type: 'int' })
   amount: number;
 
-  @Column({ default: 'UAH' })
+  @Column({ name: 'currency', type: 'text', default: 'UAH' })
   currency: string;
 
-  @Column({
-    name: 'payment_status',
-    type: 'enum',
-    enum: PaymentStatus,
-    default: PaymentStatus.PENDING
-  })
+  @Column({ name: 'payment_status', type: 'enum', enum: PaymentStatus, default: PaymentStatus.PENDING })
   paymentStatus: PaymentStatus;
 
-  @Column({ name: 'transaction_id', nullable: true })
+  @Column({ name: 'transaction_id', type: 'text', nullable: true })
   transactionId: string;
 
-  @Column({ name: 'payment_gateway', nullable: true })
+  @Column({ name: 'payment_gateway', type: 'text', nullable: true })
   paymentGateway: string;
 
   @Column({ name: 'payment_date', type: 'timestamp' })
@@ -74,6 +69,6 @@ export class Payment {
   @Column({ name: 'refund_amount', type: 'int', default: 0 })
   refundAmount: number;
 
-  @Column({ name: 'updated_at', type: 'timestamp', nullable: true })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   updatedAt: Date;
 }

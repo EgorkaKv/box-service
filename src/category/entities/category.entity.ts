@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { BoxTemplate } from '../box-template/box-template.entity';
-import { SurpriseBox } from '../surprise-box/surprise_box.entity';
+import { BoxTemplate } from '@box-template/entities/box-template.entity';
+import { SurpriseBox } from '@surprise-box/entities/surprise-box.entity'
 
 @Entity('category')
 export class Category {

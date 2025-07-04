@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Index } from 'typeorm';
-import { Customer } from '../customer/customer.entity';
-import { Store } from '../store/entities/store.entity';
-import { Order } from '../order/entities/order.entity';
+import { Customer } from '@customer/entities/customer.entity';
+import { Store } from '@store/entities/store.entity';
+import { Order } from '@order/entities/order.entity';
 
 export enum ReportStatus {
   PENDING = 'pending',
@@ -50,44 +50,32 @@ export class CustomerReport {
   store: Store;
 
   @Column({ name: 'order_id', type: 'bigint', nullable: true })
-  orderId: number | null;
+  orderId: number;
 
   @ManyToOne(() => Order, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'order_id' })
-  order: Order | null;
+  order: Order;
 
-  @Column({
-    name: 'report_type',
-    type: 'enum',
-    enum: ReportType,
-  })
-  reportType: ReportType;
+  @Column({ name: 'report_type', type: 'text' })
+  reportType: string;
 
-  @Column({ type: 'text' })
+  @Column({ name: 'subject', type: 'text' })
   subject: string;
 
   @Column({ type: 'text' })
   description: string;
 
-  @Column({
-    type: 'enum',
-    enum: ReportStatus,
-    default: ReportStatus.PENDING,
-  })
+  @Column({ name: 'status', type: 'enum', enum: ReportStatus, default: ReportStatus.PENDING })
   status: ReportStatus;
 
-  @Column({
-    type: 'enum',
-    enum: ReportPriority,
-    default: ReportPriority.MEDIUM,
-  })
+  @Column({ name: 'priority', type: 'enum', enum: ReportPriority, default: ReportPriority.MEDIUM })
   priority: ReportPriority;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
   @Column({ name: 'resolved_at', type: 'timestamp', nullable: true })
-  resolvedAt: Date | null;
+  resolvedAt: Date;
 
   @Column({ name: 'admin_response', type: 'text', nullable: true })
   adminResponse: string | null;

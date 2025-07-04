@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
-import { Store } from '../store/entities/store.entity';
-import { Category } from '../category/category.entity';
+import { Store } from '@store/entities/store.entity';
+import { Category } from '@category/entities/category.entity';
 
 @Entity('box_template')
 @Index("idx_box_template_store_active", ["storeId", "isActive"], { where: "is_active = TRUE" })
@@ -49,15 +49,15 @@ export class BoxTemplate {
   @Column({ name: 'sale_end_time', type: 'timestamp' })
   saleEndTime: Date;
 
-  @Column({ name: 'usage_count', type: 'int', default: 0 })
+  @Column({ name: 'usage_count', type: 'integer', default: 0 })
   usageCount: number;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
 }
