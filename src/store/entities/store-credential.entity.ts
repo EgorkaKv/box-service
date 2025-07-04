@@ -20,18 +20,24 @@ export class StoreCredential {
     })
     employee_role: EmployeeRole;
 
-    @Column({ nullable: true })
-    credentials?: string;
+    @Column({ name: 'login', type: 'text', unique: true })
+    login: string;
 
-    @Column()
-    hash_credentials: string;
+    @Column({ name: 'password_hash', type: 'text' })
+    passwordHash: string;
 
-    @CreateDateColumn()
-    created_at: Date;
+    @CreateDateColumn({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    createdAt: Date;
 
-    @Column({ type: 'timestamp', nullable: true })
-    last_login?: Date;
+    @Column({ name: 'last_login', type: 'timestamp', nullable: true })
+    lastLogin?: Date;
 
-    @UpdateDateColumn({ nullable: true })
-    updated_at?: Date;
+    @Column({ name: 'login_attempts', type: 'integer', default: 0 })
+    loginAttempts: number;
+
+    @Column({ name: 'last_failed_login', type: 'timestamp', nullable: true })
+    lastFailedLogin?: Date;
+
+    @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
+    updatedAt?: Date;
 }

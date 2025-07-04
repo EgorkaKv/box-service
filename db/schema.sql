@@ -60,10 +60,12 @@ CREATE TABLE IF NOT EXISTS store_credential (
 	store_id BIGINT NOT NULL REFERENCES store(id) ON DELETE CASCADE,
 	  -- ('staff', 'manager')
 	employee_role EMPLOYEE_ROLE NOT null,
-	credentials TEXT,
-	hash_credentials TEXT NOT NULL,
+	login TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	last_login TIMESTAMP,
+    login_attempts INTEGER DEFAULT 0,
+    last_failed_login TIMESTAMP,
 	updated_at TIMESTAMP,
 	UNIQUE(store_id, employee_role)
 );
