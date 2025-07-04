@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
 import {TypeOrmModule} from "@nestjs/typeorm";
-import {SurpriseBox} from "./surprise-box.entity";
+import {SurpriseBox} from "./entities/surprise-box.entity";
+import { SurpriseBoxService } from './services/surprise-box.service';
+import { SurpriseBoxController } from './controllers/surprise-box.controller';
+import { SurpriseBoxRepository } from './repositories/surprise-box.repository';
 
 @Module({
     imports: [TypeOrmModule.forFeature([SurpriseBox])],
-    controllers: [],
-    providers: [],
+    controllers: [SurpriseBoxController],
+    providers: [SurpriseBoxService, SurpriseBoxRepository],
     exports: [],
 })
 export class SurpriseBoxModule {}
