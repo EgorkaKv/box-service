@@ -1,0 +1,240 @@
+### API тесты для Surprise Box Controller
+### Базовый URL: http://localhost:3000
+
+### 1. GET /boxes/all - Получение всех активных боксов
+GET {{base_url}}/boxes/all
+Accept: application/json
+
+### 2. GET /boxes/nearby - Получение боксов поблизости (успешный запрос)
+GET {{base_url}}/boxes/nearby?latitude=55.7558&longitude=37.6173&radius=1000
+Accept: application/json
+
+### 3. GET /boxes/nearby - Получение боксов поблизости (с большим радиусом)
+GET {{base_url}}/boxes/nearby?latitude=55.7558&longitude=37.6173&radius=5000
+Accept: application/json
+
+### 4. GET /boxes/nearby - Получение боксов поблизости (с маленьким радиусом)
+GET {{base_url}}/boxes/nearby?latitude=55.7558&longitude=37.6173&radius=100
+Accept: application/json
+
+### 5. GET /boxes/nearby - Тест с невалидными координатами (некорректная широта)
+GET {{base_url}}/boxes/nearby?latitude=invalid&longitude=37.6173&radius=1000
+Accept: application/json
+
+### 6. GET /boxes/nearby - Тест с невалидными координатами (некорректная долгота)
+GET {{base_url}}/boxes/nearby?latitude=55.7558&longitude=invalid&radius=1000
+Accept: application/json
+
+### 7. GET /boxes/nearby - Тест с невалидным радиусом
+GET {{base_url}}/boxes/nearby?latitude=55.7558&longitude=37.6173&radius=invalid
+Accept: application/json
+
+### 8. GET /boxes/nearby - Тест с отсутствующими параметрами
+GET {{base_url}}/boxes/nearby
+Accept: application/json
+
+### 9. GET /boxes/nearby - Тест с экстремальными координатами (на полюсе)
+GET {{base_url}}/boxes/nearby?latitude=90&longitude=0&radius=1000
+Accept: application/json
+
+### 10. GET /boxes/nearby - Тест с экстремальными координатами (на экваторе)
+GET {{base_url}}/boxes/nearby?latitude=0&longitude=180&radius=1000
+Accept: application/json
+
+### 11. GET /boxes/nearby - Тест с отрицательными координатами
+GET {{base_url}}/boxes/nearby?latitude=-55.7558&longitude=-37.6173&radius=1000
+Accept: application/json
+
+### 12. GET /boxes/nearby - Тест с очень большим радиусом
+GET {{base_url}}/boxes/nearby?latitude=55.7558&longitude=37.6173&radius=100000
+Accept: application/json
+
+### 13. GET /boxes/nearby - Тест с нулевым радиусом
+GET {{base_url}}/boxes/nearby?latitude=55.7558&longitude=37.6173&radius=0
+Accept: application/json
+
+### 14. GET /boxes/city/:idCity - Получение боксов по ID города (успешный запрос)
+GET {{base_url}}/boxes/city/moscow
+Accept: application/json
+
+### 15. GET /boxes/city/:idCity - Получение боксов по ID города (другой город)
+GET {{base_url}}/boxes/city/spb
+Accept: application/json
+
+### 16. GET /boxes/city/:idCity - Получение боксов по несуществующему городу
+GET {{base_url}}/boxes/city/nonexistent-city
+Accept: application/json
+
+### 17. GET /boxes/city/:idCity - Получение боксов по пустому ID города
+GET {{base_url}}/boxes/city/
+Accept: application/json
+
+### 18. GET /boxes/city/:idCity - Получение боксов по ID города с пробелами
+GET {{base_url}}/boxes/city/city%20with%20spaces
+Accept: application/json
+
+### 19. GET /boxes/city/:idCity - Получение боксов по ID города с специальными символами
+GET {{base_url}}/boxes/city/city-with-special!@#$%^&*()
+Accept: application/json
+
+### 20. GET /boxes/city/:idCity - Получение боксов по числовому ID города
+GET {{base_url}}/boxes/city/12345
+Accept: application/json
+
+### 21. GET /boxes/:boxId - Получение бокса по ID (успешный запрос)
+GET {{base_url}}/boxes/1
+Accept: application/json
+
+### 22. GET /boxes/:boxId - Получение бокса по ID (другой существующий ID)
+GET {{base_url}}/boxes/2
+Accept: application/json
+
+### 23. GET /boxes/:boxId - Получение бокса по большому ID
+GET {{base_url}}/boxes/999999
+Accept: application/json
+
+### 24. GET /boxes/:boxId - Получение бокса по несуществующему ID
+GET {{base_url}}/boxes/999999999
+Accept: application/json
+
+### 25. GET /boxes/:boxId - Получение бокса по отрицательному ID
+GET {{base_url}}/boxes/-1
+Accept: application/json
+
+### 26. GET /boxes/:boxId - Получение бокса по ID равному нулю
+GET {{base_url}}/boxes/0
+Accept: application/json
+
+### 27. GET /boxes/:boxId - Получение бокса по невалидному ID (строка)
+GET {{base_url}}/boxes/invalid-id
+Accept: application/json
+
+### 28. GET /boxes/:boxId - Получение бокса по ID с дробной частью
+GET {{base_url}}/boxes/1.5
+Accept: application/json
+
+### 29. GET /boxes/:boxId - Получение бокса по очень большому ID
+GET {{base_url}}/boxes/9223372036854775807
+Accept: application/json
+
+### 30. GET /boxes/:boxId - Получение бокса по ID с пробелами (URL encoded)
+GET {{base_url}}/boxes/1%20
+Accept: application/json
+
+### === Тесты для проверки состояния системы ===
+
+### 31. GET /boxes/all - Повторный запрос для проверки кеширования
+GET {{base_url}}/boxes/all
+Accept: application/json
+
+### 32. GET /boxes/nearby - Проверка производительности с одинаковыми параметрами
+GET {{base_url}}/boxes/nearby?latitude=55.7558&longitude=37.6173&radius=1000
+Accept: application/json
+
+### 33. GET /boxes/city/moscow - Повторный запрос для проверки консистентности
+GET {{base_url}}/boxes/city/moscow
+Accept: application/json
+
+### === Тесты с различными заголовками ===
+
+### 34. GET /boxes/all - Тест с различными Accept заголовками
+GET {{base_url}}/boxes/all
+Accept: text/html
+
+### 35. GET /boxes/all - Тест с JSON Accept заголовком
+GET {{base_url}}/boxes/all
+Accept: application/json, text/plain, */*
+
+### 36. GET /boxes/all - Тест без Accept заголовка
+GET {{base_url}}/boxes/all
+
+### 37. GET /boxes/all - Тест с пользовательским заголовком
+GET {{base_url}}/boxes/all
+Accept: application/json
+User-Agent: API-Test-Client/1.0
+
+### === Тесты граничных случаев для координат ===
+
+### 38. GET /boxes/nearby - Тест с максимальными координатами
+GET {{base_url}}/boxes/nearby?latitude=90&longitude=180&radius=1000
+Accept: application/json
+
+### 39. GET /boxes/nearby - Тест с минимальными координатами
+GET {{base_url}}/boxes/nearby?latitude=-90&longitude=-180&radius=1000
+Accept: application/json
+
+### 40. GET /boxes/nearby - Тест с координатами за пределами допустимых значений
+GET {{base_url}}/boxes/nearby?latitude=91&longitude=181&radius=1000
+Accept: application/json
+
+### 41. GET /boxes/nearby - Тест с координатами за пределами допустимых значений (отрицательные)
+GET {{base_url}}/boxes/nearby?latitude=-91&longitude=-181&radius=1000
+Accept: application/json
+
+### === Тесты с различными кодировками ===
+
+### 42. GET /boxes/city/:idCity - Тест с UTF-8 символами в ID города
+GET {{base_url}}/boxes/city/москва
+Accept: application/json
+
+### 43. GET /boxes/city/:idCity - Тест с URL-encoded UTF-8 символами
+GET {{base_url}}/boxes/city/%D0%BC%D0%BE%D1%81%D0%BA%D0%B2%D0%B0
+Accept: application/json
+
+### === Стресс-тесты ===
+
+### 44. GET /boxes/nearby - Тест с очень точными координатами (много знаков после запятой)
+GET {{base_url}}/boxes/nearby?latitude=55.7558123456789&longitude=37.6173987654321&radius=1000
+Accept: application/json
+
+### 45. GET /boxes/nearby - Тест с очень длинной строкой в параметрах
+GET {{base_url}}/boxes/nearby?latitude=55.7558&longitude=37.6173&radius=1000&extra=verylongstringwithmanycharstosimulatepotentialissues
+Accept: application/json
+
+### === Тесты для проверки безопасности ===
+
+### 46. GET /boxes/city/:idCity - Тест с SQL injection попыткой
+GET {{base_url}}/boxes/city/'; DROP TABLE surprise_box; --
+Accept: application/json
+
+### 47. GET /boxes/city/:idCity - Тест с XSS попыткой
+#GET {{base_url}}/boxes/city/<script>alert('xss')</script>
+#Accept: application/json
+
+### 48. GET /boxes/:boxId - Тест с SQL injection в ID
+GET {{base_url}}/boxes/1' OR '1'='1
+Accept: application/json
+
+### === Тесты для проверки разных методов HTTP ===
+
+### 49. POST /boxes/all - Неподдерживаемый метод
+POST {{base_url}}/boxes/all
+Accept: application/json
+
+### 50. PUT /boxes/1 - Неподдерживаемый метод
+PUT {{base_url}}/boxes/1
+Accept: application/json
+
+### 51. DELETE /boxes/1 - Неподдерживаемый метод
+DELETE {{base_url}}/boxes/1
+Accept: application/json
+
+### 52. PATCH /boxes/1 - Неподдерживаемый метод
+PATCH {{base_url}}/boxes/1
+Accept: application/json
+
+### === Дополнительные тесты для coverage ===
+
+### 53. GET /boxes/nearby - Тест с дробными значениями параметров
+GET {{base_url}}/boxes/nearby?latitude=55.7558&longitude=37.6173&radius=1000.5
+Accept: application/json
+
+### 54. GET /boxes/nearby - Тест с экспоненциальной нотацией
+GET {{base_url}}/boxes/nearby?latitude=5.57558e1&longitude=3.76173e1&radius=1e3
+Accept: application/json
+
+### 55. GET /boxes/city/:idCity - Тест с очень длинным ID города
+GET {{base_url}}/boxes/city/verylongcityidthatmightcauseissuesifnothandledproperly
+Accept: application/json
+
+###
