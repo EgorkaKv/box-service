@@ -3,7 +3,7 @@ import {
     CreateDateColumn, UpdateDateColumn, Index
 } from 'typeorm';
 import { Business } from './business.entity';
-import { StoreCredential } from './store-credential.entity';
+import { StoreCredential } from '@auth/entities/store-credential.entity';
 import { Order } from '@order/entities/order.entity';
 import { SurpriseBox } from '@surprise-box/entities/surprise-box.entity';
 import { BoxTemplate } from '@box-template/entities/box-template.entity';
