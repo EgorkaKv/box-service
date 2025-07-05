@@ -1,6 +1,6 @@
 import {
     Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany,
-    CreateDateColumn, UpdateDateColumn, Index
+    CreateDateColumn, UpdateDateColumn, Index, JoinColumn
 } from 'typeorm';
 import { Business } from './business.entity';
 import { StoreCredential } from '@auth/entities/store-credential.entity';
@@ -18,6 +18,7 @@ export class Store {
     id: number;
 
     @ManyToOne(() => Business, (business) => business.stores, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'business_id' })
     business: Business;
 
     @Column()
