@@ -1,0 +1,276 @@
+### ===========================================
+### Создание учетных данных для всех магазинов
+### ===========================================
+
+### КАФЕ РИНОК - Store ID 1 (пл. Ринок, 12)
+
+### Staff
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 1,
+  "login": "rinok1",
+  "password": "qwerty",
+  "role": "staff"
+}
+
+### Manager
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 1,
+  "login": "rinok1m",
+  "password": "qwerty",
+  "role": "manager"
+}
+
+### ===========================================
+
+### КАФЕ РИНОК - Store ID 2 (вул. Валова, 15)
+### Staff
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 2,
+  "login": "rinok2",
+  "password": "qwerty",
+  "role": "staff"
+}
+
+### Manager
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 2,
+  "login": "rinok2m",
+  "password": "qwerty",
+  "role": "manager"
+}
+
+### ===========================================
+
+### КАФЕ РИНОК - Store ID 3 (вул. Січових Стрільців, 8)
+### Staff
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 3,
+  "login": "rinok3",
+  "password": "qwerty",
+  "role": "staff"
+}
+
+### Manager
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 3,
+  "login": "rinok3m",
+  "password": "qwerty",
+  "role": "manager"
+}
+
+### ===========================================
+
+### CoffeLab - Store ID 4 (вул. Ференца Ліста, 4)
+### Staff
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 4,
+  "login": "cflab1",
+  "password": "qwerty",
+  "role": "staff"
+}
+
+### Manager
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 4,
+  "login": "cflab1m",
+  "password": "qwerty",
+  "role": "manager"
+}
+
+### ===========================================
+
+### CoffeLab - Store ID 5 (вул. Генерала Чупринки, 40)
+### Staff
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 5,
+  "login": "cflab2",
+  "password": "qwerty",
+  "role": "staff"
+}
+
+### Manager
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 5,
+  "login": "cflab2m",
+  "password": "qwerty",
+  "role": "manager"
+}
+
+### ===========================================
+
+### CoffeLab - Store ID 6 (вул. Коперника, 21)
+### Staff
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 6,
+  "login": "cflab3",
+  "password": "qwerty",
+  "role": "staff"
+}
+
+### Manager
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 6,
+  "login": "cflab3m",
+  "password": "qwerty",
+  "role": "manager"
+}
+
+### ===========================================
+
+### Сімейна пекарня - Store ID 7 (вул. Зелена, 109)
+### Staff
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 7,
+  "login": "piekar1",
+  "password": "qwerty",
+  "role": "staff"
+}
+
+### Manager
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 7,
+  "login": "piekar1m",
+  "password": "qwerty",
+  "role": "manager"
+}
+
+### ===========================================
+
+### Сімейна пекарня - Store ID 8 (вул. Пасічна, 71)
+### Staff
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 8,
+  "login": "piekar2",
+  "password": "qwerty",
+  "role": "staff"
+}
+
+### Manager
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 8,
+  "login": "piekar2m",
+  "password": "qwerty",
+  "role": "manager"
+}
+
+### ===========================================
+
+### Сімейна пекарня - Store ID 9 (вул. Наукова, 35)
+### Staff
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 9,
+  "login": "piekar3",
+  "password": "qwerty",
+  "role": "staff"
+}
+
+### Manager
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 9,
+  "login": "piekar3m",
+  "password": "qwerty",
+  "role": "manager"
+}
+
+### ===========================================
+### Тестирование созданных учетных данных
+### ===========================================
+
+### Проверка логина staff для КАФЕ РИНОК
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "rinok1",
+  "password": "qwerty"
+}
+
+### Проверка логина manager для CoffeLab
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "cflab1m",
+  "password": "qwerty"
+}
+
+### Проверка логина staff для Сімейна пекарня
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "piekar3",
+  "password": "qwerty"
+}

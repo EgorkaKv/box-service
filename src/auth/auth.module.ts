@@ -9,5 +9,23 @@ import { AuthRepository } from './repositories/auth.repository';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { StoreCredential } from './entities/store-credential.entity';
 
-@Module({})
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([StoreCredential]),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET', 'defaultSecretKey'),
+        signOptions: {
+          expiresIn: configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m'),
+        },
+      }),
+    }),
+  ],
+  controllers: [AuthController],
+  providers: [AuthService, AuthRepository, JwtStrategy],
+  exports: [AuthService, JwtStrategy, PassportModule],
+})
 export class AuthModule {}

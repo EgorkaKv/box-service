@@ -1,6 +1,6 @@
 import {
   Entity, PrimaryGeneratedColumn, Column, ManyToOne,
-  CreateDateColumn, UpdateDateColumn, Unique
+  CreateDateColumn, UpdateDateColumn, Unique, JoinColumn
 } from 'typeorm';
 import { Store } from '@store/entities/store.entity';
 
@@ -10,19 +10,21 @@ export enum EmployeeRole {
 }
 
 @Entity()
-@Unique(['store', 'employee_role'])
+@Unique(['store', 'employeeRole'])
 export class StoreCredential {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
   @ManyToOne(() => Store, (store) => store.credentials, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'store_id' })
   store: Store;
 
   @Column({
+    name: 'employee_role',
     type: 'enum',
     enum: EmployeeRole,
   })
-  employee_role: EmployeeRole;
+  employeeRole: EmployeeRole;
 
   @Column({ name: 'login', type: 'text', unique: true })
   login: string;

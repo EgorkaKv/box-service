@@ -1,0 +1,67 @@
+
+### Регистрация работника магазина (staff)
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 1,
+  "login": "store_1_staff",
+  "password": "password123"
+}
+
+### Регистрация менеджера магазина
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 1,
+  "login": "store_1_manager",
+  "password": "manager123",
+  "role": "manager"
+}
+
+### Ошибка - неверный админский пароль
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: wrong_password
+
+{
+  "storeId": 1,
+  "login": "test_user",
+  "password": "password123"
+}
+
+### Ошибка - отсутствует админский пароль
+POST {{base_url}}/auth/register
+Content-Type: application/json
+
+{
+  "storeId": 1,
+  "login": "test_user",
+  "password": "password123"
+}
+
+### Ошибка - дублирование логина
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 1,
+  "login": "store_1_staff",
+  "password": "password123"
+}
+
+### Ошибка - дублирование роли для магазина
+POST {{base_url}}/auth/register
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 1,
+  "login": "another_staff",
+  "password": "password123",
+  "role": "staff"
+}

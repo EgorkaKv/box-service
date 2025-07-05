@@ -1,0 +1,371 @@
+### API тесты для POST /auth/login - Аутентификация магазина
+### Базовый URL: http://localhost:3 000
+
+### === Успешные тесты авторизации ===
+
+### 1. POST /auth/login - Успешная авторизация сотрудника
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "rinok2",
+  "password": "qwerty"
+}
+
+### 2. POST /auth/login - Успешная авторизация менеджера
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "store1_manager",
+  "password": "manager456"
+}
+
+### 3. POST /auth/login - Авторизация другого магазина
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "store2_staff",
+  "password": "password789"
+}
+
+### === Тесты с неверными учетными данными ===
+
+### 4. POST /auth/login - Неверный пароль
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "store1_staff",
+  "password": "wrongpassword"
+}
+
+### 5. POST /auth/login - Несуществующий логин
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "nonexistent_user",
+  "password": "password123"
+}
+
+### 6. POST /auth/login - Пустой логин
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "",
+  "password": "password123"
+}
+
+### 7. POST /auth/login - Пустой пароль
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "store1_staff",
+  "password": ""
+}
+
+### === Тесты валидации ===
+
+### 8. POST /auth/login - Отсутствующий логин
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "password": "password123"
+}
+
+### 9. POST /auth/login - Отсутствующий пароль
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "store1_staff"
+}
+
+### 10. POST /auth/login - Пустой JSON
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{}
+
+### 11. POST /auth/login - Невалидный JSON
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "store1_staff",
+  "password": "password123",
+  "extra": "field"
+}
+
+### === Тесты типов данных ===
+
+### 12. POST /auth/login - Логин как число
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": 123456,
+  "password": "password123"
+}
+
+### 13. POST /auth/login - Пароль как число
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "store1_staff",
+  "password": 123456
+}
+
+### 14. POST /auth/login - Логин как boolean
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": true,
+  "password": "password123"
+}
+
+### 15. POST /auth/login - Логин как null
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": null,
+  "password": "password123"
+}
+
+### === Тесты безопасности ===
+
+### 16. POST /auth/login - SQL injection попытка в логине
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "admin' OR '1'='1' --",
+  "password": "password123"
+}
+
+### 17. POST /auth/login - SQL injection попытка в пароле
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "store1_staff",
+  "password": "' OR '1'='1' --"
+}
+
+### 18. POST /auth/login - XSS попытка в логине
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "<script>alert('xss')</script>",
+  "password": "password123"
+}
+
+### 19. POST /auth/login - Очень длинный логин
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "verylongloginnamethatshouldnotbeacceptedifthereisalimitonloginnamelengthinthevalidation",
+  "password": "password123"
+}
+
+### 20. POST /auth/login - Очень длинный пароль
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "store1_staff",
+  "password": "verylongpasswordthatmightcauseissuesifnothandledproperlyintheauthenticationprocess"
+}
+
+### === Тесты блокировки аккаунта ===
+
+### 21. POST /auth/login - Первая неудачная попытка
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "test_lockout_user",
+  "password": "wrongpassword1"
+}
+
+### 22. POST /auth/login - Вторая неудачная попытка
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "test_lockout_user",
+  "password": "wrongpassword2"
+}
+
+### 23. POST /auth/login - Третья неудачная попытка
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "test_lockout_user",
+  "password": "wrongpassword3"
+}
+
+### 24. POST /auth/login - Четвертая неудачная попытка
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "test_lockout_user",
+  "password": "wrongpassword4"
+}
+
+### 25. POST /auth/login - Пятая неудачная попытка (блокировка)
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "test_lockout_user",
+  "password": "wrongpassword5"
+}
+
+### 26. POST /auth/login - Попытка входа с заблокированным аккаунтом
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "test_lockout_user",
+  "password": "correctpassword"
+}
+
+### === Тесты с различными заголовками ===
+
+### 27. POST /auth/login - Без Content-Type
+POST {{base_url}}/auth/login
+
+{
+  "login": "store1_staff",
+  "password": "password123"
+}
+
+### 28. POST /auth/login - Неверный Content-Type
+POST {{base_url}}/auth/login
+Content-Type: text/plain
+
+{
+  "login": "store1_staff",
+  "password": "password123"
+}
+
+### 29. POST /auth/login - С дополнительными заголовками
+POST {{base_url}}/auth/login
+Content-Type: application/json
+User-Agent: Auth-Test-Client/1.0
+X-Custom-Header: test-value
+
+{
+  "login": "store1_staff",
+  "password": "password123"
+}
+
+### === Тесты производительности ===
+
+### 30. POST /auth/login - Повторная авторизация
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "store1_staff",
+  "password": "password123"
+}
+
+### === Тесты с неподдерживаемыми методами ===
+
+### 31. GET /auth/login - Неподдерживаемый метод
+GET {{base_url}}/auth/login
+
+### 32. PUT /auth/login - Неподдерживаемый метод
+PUT {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "store1_staff",
+  "password": "password123"
+}
+
+### 33. DELETE /auth/login - Неподдерживаемый метод
+DELETE {{base_url}}/auth/login
+
+### === Тесты с Unicode и специальными символами ===
+
+### 34. POST /auth/login - Логин с Unicode символами
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "магазин_сотрудник",
+  "password": "password123"
+}
+
+### 35. POST /auth/login - Пароль с Unicode символами
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "store1_staff",
+  "password": "пароль123"
+}
+
+### 36. POST /auth/login - Логин с пробелами
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": " store1_staff ",
+  "password": "password123"
+}
+
+### 37. POST /auth/login - Пароль с пробелами
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "store1_staff",
+  "password": " password123 "
+}
+
+### === Тесты регистрозависимости ===
+
+### 38. POST /auth/login - Логин в верхнем регистре
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "STORE1_STAFF",
+  "password": "password123"
+}
+
+### 39. POST /auth/login - Смешанный регистр в логине
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "Store1_Staff",
+  "password": "password123"
+}
+
+### 40. POST /auth/login - Смешанный регистр в пароле
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "store1_staff",
+  "password": "Password123"
+}
+
+###

@@ -1,0 +1,302 @@
+### API тесты для POST /auth/refresh - Обновление токена доступа
+### Базовый URL: http://localhost:3 000
+
+### === Успешные тесты обновления токена ===
+
+### 1. POST /auth/refresh - Успешное обновление токена с валидным refresh token
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjMsInN0b3JlSWQiOjIsImxvZ2luIjoicmlub2syIiwidHlwZSI6InN0b3JlX2VtcGxveWVlIiwiaWF0IjoxNzUxNzIyNDA3LCJleHAiOjE3NTIzMjcyMDd9.QZOGHY7WmDIGbB2uYkZb2V03kkdSUCcZrIHNUhID3mQ"
+}
+
+### 2. POST /auth/refresh - Обновление токена менеджера
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjIsInN0b3JlSWQiOjEsImxvZ2luIjoic3RvcmUxX21hbmFnZXIiLCJ0eXBlIjoic3RvcmVfZW1wbG95ZWUiLCJpYXQiOjE3MzYwNjE2MDAsImV4cCI6MTczNjY2NjQwMH0.example_manager_refresh_token"
+}
+
+### 3. POST /auth/refresh - Обновление токена другого магазина
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjMsInN0b3JlSWQiOjIsImxvZ2luIjoic3RvcmUyX3N0YWZmIiwidHlwZSI6InN0b3JlX2VtcGxveWVlIiwiaWF0IjoxNzM2MDYxNjAwLCJleHAiOjE3MzY2NjY0MDB9.example_store2_refresh_token"
+}
+
+### === Тесты с невалидными токенами ===
+
+### 4. POST /auth/refresh - Истекший refresh token
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInN0b3JlSWQiOjEsImxvZ2luIjoic3RvcmUxX3N0YWZmIiwidHlwZSI6InN0b3JlX2VtcGxveWVlIiwiaWF0IjoxNzM1MDAwMDAwLCJleHAiOjE3MzUwMDA2MDB9.expired_refresh_token"
+}
+
+### 5. POST /auth/refresh - Поддельный refresh token
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "fake.token.signature"
+}
+
+### 6. POST /auth/refresh - Невалидный JWT формат
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "not-a-valid-jwt-token"
+}
+
+### 7. POST /auth/refresh - Пустой refresh token
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": ""
+}
+
+### 8. POST /auth/refresh - Refresh token с неверной подписью
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInN0b3JlSWQiOjEsImxvZ2luIjoic3RvcmUxX3N0YWZmIiwidHlwZSI6InN0b3JlX2VtcGxveWVlIiwiaWF0IjoxNzM2MDYxNjAwLCJleHAiOjE3MzY2NjY0MDB9.invalid_signature"
+}
+
+### === Тесты валидации ===
+
+### 9. POST /auth/refresh - Отсутствующий refreshToken
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{}
+
+### 10. POST /auth/refresh - Null refreshToken
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": null
+}
+
+### 11. POST /auth/refresh - RefreshToken как число
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": 123456
+}
+
+### 12. POST /auth/refresh - RefreshToken как boolean
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": true
+}
+
+### 13. POST /auth/refresh - RefreshToken как массив
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": ["token1", "token2"]
+}
+
+### 14. POST /auth/refresh - RefreshToken как объект
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": {
+    "token": "some-token"
+  }
+}
+
+### === Тесты безопасности ===
+
+### 15. POST /auth/refresh - SQL injection попытка в refresh token
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "'; DROP TABLE store_credential; --"
+}
+
+### 16. POST /auth/refresh - XSS попытка в refresh token
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "<script>alert('xss')</script>"
+}
+
+### 17. POST /auth/refresh - Очень длинный refresh token
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "verylongfakerefreshtoken".repeat(1000)
+}
+
+### 18. POST /auth/refresh - Refresh token с управляющими символами
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "token\n\r\t\b\f"
+}
+
+### === Тесты с различными заголовками ===
+
+### 19. POST /auth/refresh - Без Content-Type
+POST {{base_url}}/auth/refresh
+
+{
+  "refreshToken": "valid.refresh.token"
+}
+
+### 20. POST /auth/refresh - Неверный Content-Type
+POST {{base_url}}/auth/refresh
+Content-Type: text/plain
+
+{
+  "refreshToken": "valid.refresh.token"
+}
+
+### 21. POST /auth/refresh - С дополнительными заголовками
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+User-Agent: Refresh-Test-Client/1.0
+X-Custom-Header: refresh-test
+
+{
+  "refreshToken": "valid.refresh.token"
+}
+
+### === Тесты производительности ===
+
+### 22. POST /auth/refresh - Повторное обновление с тем же токеном
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInN0b3JlSWQiOjEsImxvZ2luIjoic3RvcmUxX3N0YWZmIiwidHlwZSI6InN0b3JlX2VtcGxveWVlIiwiaWF0IjoxNzM2MDYxNjAwLCJleHAiOjE3MzY2NjY0MDB9.example_refresh_token"
+}
+
+### 23. POST /auth/refresh - Проверка времени отклика
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInN0b3JlSWQiOjEsImxvZ2luIjoic3RvcmUxX3N0YWZmIiwidHlwZSI6InN0b3JlX2VtcGxveWVlIiwiaWF0IjoxNzM2MDYxNjAwLCJleHAiOjE3MzY2NjY0MDB9.example_refresh_token"
+}
+
+### === Тесты с неподдерживаемыми методами ===
+
+### 24. GET /auth/refresh - Неподдерживаемый метод
+GET {{base_url}}/auth/refresh
+
+### 25. PUT /auth/refresh - Неподдерживаемый метод
+PUT {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "valid.refresh.token"
+}
+
+### 26. DELETE /auth/refresh - Неподдерживаемый метод
+DELETE {{base_url}}/auth/refresh
+
+### 27. PATCH /auth/refresh - Неподдерживаемый метод
+PATCH {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "valid.refresh.token"
+}
+
+### === Тесты с edge cases ===
+
+### 28. POST /auth/refresh - Refresh token с пробелами
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": " eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example.token "
+}
+
+### 29. POST /auth/refresh - Refresh token с переносами строк
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.\nexample.\ntoken"
+}
+
+### 30. POST /auth/refresh - Refresh token с Unicode символами
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "токен🔑"
+}
+
+### === Тесты с недействительными payload ===
+
+### 31. POST /auth/refresh - Refresh token с отсутствующим пользователем
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjk5OTk5OSwic3RvcmVJZCI6OTk5OTk5LCJsb2dpbiI6Im5vbmV4aXN0ZW50X3VzZXIiLCJ0eXBlIjoic3RvcmVfZW1wbG95ZWUiLCJpYXQiOjE3MzYwNjE2MDAsImV4cCI6MTczNjY2NjQwMH0.nonexistent_user_token"
+}
+
+### 32. POST /auth/refresh - Access token вместо refresh token
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInN0b3JlSWQiOjEsImxvZ2luIjoic3RvcmUxX3N0YWZmIiwidHlwZSI6InN0b3JlX2VtcGxveWVlIiwiaWF0IjoxNzM2MDYxNjAwLCJleHAiOjE3MzYwNjI1MDB9.access_token_instead_of_refresh"
+}
+
+### === Тесты с дополнительными полями ===
+
+### 33. POST /auth/refresh - С дополнительными полями в теле запроса
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "valid.refresh.token",
+  "extraField": "should-be-ignored",
+  "anotherField": 123
+}
+
+### 34. POST /auth/refresh - С вложенными объектами
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "valid.refresh.token",
+  "nested": {
+    "field": "value"
+  }
+}
+
+### === Тесты корректности ответа ===
+
+### 35. POST /auth/refresh - Проверка структуры ответа
+POST {{base_url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInN0b3JlSWQiOjEsImxvZ2luIjoic3RvcmUxX3N0YWZmIiwidHlwZSI6InN0b3JlX2VtcGxveWVlIiwiaWF0IjoxNzM2MDYxNjAwLCJleHAiOjE3MzY2NjY0MDB9.example_refresh_token"
+}
+
+###

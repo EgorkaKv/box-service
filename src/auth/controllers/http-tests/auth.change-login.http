@@ -1,0 +1,52 @@
+
+### Изменение логина для staff (по умолчанию)
+PUT {{base_url}}/auth/change-login
+Content-Type: application/json
+X-Admin-Password: admin1
+
+{
+  "storeId": 1,
+  "newLogin": "store_1_staff_new"
+}
+
+### Изменение логина для manager
+PUT {{base_url}}/auth/change-login
+Content-Type: application/json
+X-Admin-Password: admin123!@#
+
+{
+  "storeId": 1,
+  "role": "manager",
+  "newLogin": "store_1_manager_new"
+}
+
+### Ошибка - неверный админский пароль
+PUT {{base_url}}/auth/change-login
+Content-Type: application/json
+X-Admin-Password: wrong_password
+
+{
+  "storeId": 1,
+  "newLogin": "test_login"
+}
+
+### Ошибка - логин уже используется
+PUT {{base_url}}/auth/change-login
+Content-Type: application/json
+X-Admin-Password: admin123!@#
+
+{
+  "storeId": 1,
+  "newLogin": "store_1_manager_new"
+}
+
+### Ошибка - учетные данные не найдены
+PUT {{base_url}}/auth/change-login
+Content-Type: application/json
+X-Admin-Password: admin123!@#
+
+{
+  "storeId": 999,
+  "role": "staff",
+  "newLogin": "test_login"
+}
