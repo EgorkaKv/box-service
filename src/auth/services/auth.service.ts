@@ -8,6 +8,7 @@ import {AuthResponseDto} from '../dto/auth-response.dto';
 import {RegisterEmployeeDto, RegisterEmployeeResponseDto} from '../dto/register-employee.dto';
 import {EmployeeRole, StoreCredential} from '../entities/store-credential.entity';
 import {ChangeCredentialsResponseDto, ChangeLoginDto, ChangePasswordDto} from '../dto/change-credentials.dto';
+import { AppLogger } from '../../common/logger/app-logger.service';
 
 @Injectable()
 export class AuthService {
@@ -18,19 +19,27 @@ export class AuthService {
     private readonly authRepository: AuthRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly logger: AppLogger,
   ) {}
 
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
     const { login, password } = loginDto;
 
+    this.logger.debug(`Login attempt for user: ${login}`);
+
     // Найти учетные данные магазина
     const storeCredential = await this.authRepository.findByLogin(login);
     if (!storeCredential) {
+      this.logger.warn(`Login failed: user not found - ${login}`);
       throw new UnauthorizedException('Неверные учетные данные');
     }
 
     // Проверить блокировку аккаунта
     if (this.isAccountLocked(storeCredential)) {
+      this.logger.warn(`Login blocked: account locked - ${login}`, 'AuthService', {
+        loginAttempts: storeCredential.loginAttempts,
+        lastFailedLogin: storeCredential.lastFailedLogin,
+      });
       throw new UnauthorizedException('Аккаунт заблокирован из-за превышения попыток входа');
     }
 
@@ -38,11 +47,18 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(password, storeCredential.passwordHash);
     if (!isPasswordValid) {
       await this.authRepository.incrementLoginAttempts(storeCredential.id);
+      this.logger.warn(`Login failed: invalid password - ${login}`, 'AuthService', {
+        attempts: storeCredential.loginAttempts + 1,
+        userId: storeCredential.id,
+        storeId: storeCredential.store.id,
+      });
       throw new UnauthorizedException('Неверные учетные данные');
     }
 
     // Успешная авторизация
     await this.authRepository.updateLastLogin(storeCredential.id);
+
+    this.logger.logAuth('login_success', storeCredential.id, storeCredential.store.id);
 
     // Генерация токенов
     const payload = {
@@ -71,11 +87,13 @@ export class AuthService {
 
   async refreshToken(refreshToken: string): Promise<AuthResponseDto> {
     try {
+      this.logger.debug('Попытка обновления токена', 'AuthService');
       const payload = this.jwtService.verify(refreshToken);
 
       // Проверить, что токен еще действителен
       const storeCredential = await this.authRepository.findByLogin(payload.login);
       if (!storeCredential) {
+        this.logger.warn(`Обновление токена отклонено: пользователь ${payload.login} не найден`, 'AuthService');
         throw new UnauthorizedException('Недействительный токен');
       }
 
@@ -95,6 +113,8 @@ export class AuthService {
         expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN', '7d'),
       });
 
+      this.logger.log('token_refreshed', 'AuthService', { credentialId: storeCredential.id, storeId: storeCredential.store.id} );
+
       return {
         accessToken: newAccessToken,
         refreshToken: newRefreshToken,
@@ -103,14 +123,19 @@ export class AuthService {
         expiresIn: 15 * 60,
       };
     } catch (error) {
+      this.logger.warn('Обновление токена не удалось', 'AuthService', { errorMessage: error.message });
       throw new UnauthorizedException('Недействительный refresh token');
     }
   }
 
   async validateToken(token: string): Promise<any> {
     try {
-      return this.jwtService.verify(token);
+      this.logger.debug('Валидация токена', 'AuthService');
+      const payload = this.jwtService.verify(token);
+      this.logger.debug('Токен успешно валидирован', 'AuthService', { userId: payload.sub });
+      return payload;
     } catch (error) {
+      this.logger.warn('Токен не валиден', 'AuthService', { errorMessage: error.message });
       throw new UnauthorizedException('Недействительный токен');
     }
   }
@@ -120,6 +145,8 @@ export class AuthService {
    */
   async registerEmployee(registerDto: RegisterEmployeeDto): Promise<RegisterEmployeeResponseDto> {
     const { storeId, login, password, role = EmployeeRole.STAFF } = registerDto;
+
+    this.logger.log(`Employee registration attempt: ${login} for store ${storeId} with role ${role}`);
 
     // Проверить существование магазина
     const storeExists = await this.checkStoreExists(storeId);
@@ -145,10 +172,17 @@ export class AuthService {
 
     // Создать учетные данные
     const newCredentials = await this.authRepository.create({
-      store: { id: storeId! } as any, // Приводим к типу any, чтобы TypeScript не ругался
+      store: { id: storeId! } as any,
       login,
       passwordHash,
       employeeRole: role,
+    });
+
+    this.logger.logAuth('employee_registered', newCredentials.id, storeId, 'AuthService');
+    this.logger.log(`Employee successfully registered: ${login}`, 'AuthService', {
+      employeeId: newCredentials.id,
+      storeId,
+      role,
     });
 
     return {
@@ -166,6 +200,8 @@ export class AuthService {
   async changeLogin(changeLoginDto: ChangeLoginDto): Promise<ChangeCredentialsResponseDto> {
     const { storeId, role = EmployeeRole.STAFF, newLogin } = changeLoginDto;
 
+    this.logger.log(`Login change request for store ${storeId}, role ${role} to ${newLogin}`);
+
     // Найти существующие учетные данные
     const existingCredential = await this.authRepository.findByStoreAndRole(storeId, role);
     if (!existingCredential) {
@@ -180,6 +216,12 @@ export class AuthService {
 
     // Обновить логин и получить UpdateResult
     await this.authRepository.updateLogin(storeId, role, newLogin);
+
+    this.logger.log(`Login successfully changed for store ${storeId}, role ${role}`, 'AuthService', {
+      storeId,
+      role,
+      newLogin,
+    });
 
     return {
       success: true,
@@ -196,6 +238,8 @@ export class AuthService {
   async changePassword(changePasswordDto: ChangePasswordDto): Promise<ChangeCredentialsResponseDto> {
     const { storeId, role = EmployeeRole.STAFF, newPassword } = changePasswordDto;
 
+    this.logger.log(`Password change request for store ${storeId}, role ${role}`);
+
     // Найти существующие учетные данные
     const existingCredential = await this.authRepository.findByStoreAndRole(storeId, role);
     if (!existingCredential) {
@@ -208,6 +252,11 @@ export class AuthService {
 
     // Обновить пароль (не трогаем loginAttempts, так как это админская операция)
     await this.authRepository.updatePassword(storeId, role, newPasswordHash);
+
+    this.logger.log(`Password successfully changed for store ${storeId}, role ${role}`, 'AuthService', {
+      storeId,
+      role,
+    });
 
     return {
       success: true,
@@ -225,9 +274,12 @@ export class AuthService {
     // Простая проверка через попытку найти учетные данные с этим storeId
     // Альтернативно можно создать отдельный StoreRepository
     try {
+      this.logger.debug(`Проверка существования магазина с ID: ${storeId}`, 'AuthService');
       const result = await this.authRepository.findByStoreId(storeId);
+      this.logger.debug(`Магазин с ID: ${storeId} ${result.length > 0 ? 'существует' : 'не найден'}`, 'AuthService');
       return true; // Если запрос выполнился успешно, магазин существует
     } catch (error) {
+      this.logger.error(`Ошибка при проверке существования магазина ${storeId}`, error.stack, 'AuthService');
       return false;
     }
   }
