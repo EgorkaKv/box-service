@@ -12,15 +12,17 @@ import { ReviewModule } from '@review/review.module';
 import { CustomerReportModule } from '@customer-report/customer-report.module';
 import { BoxTemplateModule } from '@box-template/box-template.module';
 import { CategoryModule } from '@category/category.module';
+import { LoggerModule } from './common/logger/logger.module';
 
 @Module({
   imports: [
       ConfigModule.forRoot({isGlobal: true}),
+      LoggerModule,
       TypeOrmModule.forRootAsync({
           imports: [ConfigModule],
           useFactory: (config: ConfigService) => ({
-              logging: true,
-              logger: 'advanced-console',
+              // logging: true,
+              // logger: 'advanced-console',
               type: 'postgres',
               host: config.get('DATABASE_HOST'),
               port: Number(config.get('DATABASE_PORT')),
