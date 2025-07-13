@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SurpriseBox, BoxStatus } from '../entities/surprise-box.entity';
+import {ReserveBoxDto} from "@order/dto/reserve-box.dto";
+import {OperationResult} from "@common/interfaces/operation-result.interface";
+import {operationResultHelper} from "@common/interfaces/operation-result.helper";
 
 @Injectable()
 export class SurpriseBoxRepository {
@@ -93,5 +96,20 @@ export class SurpriseBoxRepository {
         createdAt: 'DESC',
       },
     });
+  }
+
+  // Вызов атомарной функции резервирования
+  async reserveBoxAtomic(reserveBoxDto: ReserveBoxDto): Promise<OperationResult<{expiresAt: string}>> {
+    const result = await this.surpriseBoxRepository.query(
+      'SELECT * FROM reserve_surprise_box_atomic($1, $2, $3)', [
+        reserveBoxDto.surpriseBoxId,
+        reserveBoxDto.customerId,
+        reserveBoxDto.reservationMinutes,
+      ]
+    );
+
+    const queryResult = operationResultHelper(result[0]);
+
+    return queryResult;
   }
 }

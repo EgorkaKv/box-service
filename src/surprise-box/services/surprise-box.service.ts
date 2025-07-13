@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { SurpriseBoxRepository } from '../repositories/surprise-box.repository';
 import { SurpriseBox } from '../entities/surprise-box.entity';
+import {ReserveBoxDto} from "@order/dto/reserve-box.dto";
+import {OperationResult} from "@common/interfaces/operation-result.interface";
 
 @Injectable()
 export class SurpriseBoxService {
@@ -58,5 +60,12 @@ export class SurpriseBoxService {
    */
   async getActiveBoxesByStore(storeId: number): Promise<SurpriseBox[]> {
     return this.surpriseBoxRepository.findActiveBoxesByStore(storeId);
+  }
+
+  /**
+   * Зарезервировать бокс для заказа
+   */
+  async reserveBox(reserveBoxDto: ReserveBoxDto): Promise<OperationResult<{expiresAt: string}>> {
+    return await this.surpriseBoxRepository.reserveBoxAtomic(reserveBoxDto);
   }
 }
