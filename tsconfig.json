@@ -26,7 +26,8 @@
       "@order/*": ["order/*"],
       "@review/*": ["review/*"],
       "@store/*": ["store/*"],
-      "@surprise-box/*": ["surprise-box/*"]
+      "@surprise-box/*": ["surprise-box/*"],
+      "@common/*": ["common/*"],
     }
   }
 }

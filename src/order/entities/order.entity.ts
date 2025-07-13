@@ -1,9 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany, Index } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany, OneToOne, Index } from 'typeorm';
 import { Customer } from '@customer/entities/customer.entity';
 import { SurpriseBox } from '@surprise-box/entities/surprise-box.entity';
 import { Store } from '@store/entities/store.entity';
 import { Review } from '@review/entities/review.entity';
 import { CustomerReport } from '@customer-report/entities/customer-report.entity';
+import { Delivery } from './delivery.entity';
+import {Payment} from "@order/entities/payment.entity";
 
 export enum OrderStatus {
   PENDING = 'pending',
@@ -92,4 +94,11 @@ export class Order {
 
   @OneToMany(() => CustomerReport, (report) => report.order)
   reports: CustomerReport[];
+
+  @OneToOne(() => Delivery, (delivery) => delivery.order)
+  delivery: Delivery;
+
+  // TODO: сделать в базе данных связь 1:1 с платежами
+  @OneToOne(()=> Payment, (payment) => payment.order)
+  payment: Payment;
 }
