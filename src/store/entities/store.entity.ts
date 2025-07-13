@@ -37,23 +37,23 @@ export class Store {
     @Column({ nullable: true })
     description?: string;
 
-    @Column({ nullable: true })
-    store_image_url?: string;
+    @Column({ name: 'store_image_url', nullable: true })
+    storeImageUrl?: string;
 
-    @Column({ nullable: true })
-    box_image_url?: string;
+    @Column({ name: 'box_image_url', nullable: true })
+    boxImageUrl?: string;
 
-    @Column({ type: 'jsonb', nullable: true })
-    opening_hours?: Record<string, unknown>;
+    @Column({ name:'opening_hours', type: 'jsonb', nullable: true })
+    openingHours?: Record<string, unknown>;
 
-    @Column({ default: true })
-    is_active: boolean;
+    @Column({ name: 'is_active', default: true })
+    isActive: boolean;
 
-    @CreateDateColumn({ type: 'timestamp' })
-    created_at: Date;
+    @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+    createdAt: Date;
 
-    @UpdateDateColumn({ type: 'timestamp' })
-    updated_at: Date;
+    @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
+    updatedAt: Date;
 
     @OneToMany(() => StoreCredential, (cred) => cred.store)
     credentials: StoreCredential[];
