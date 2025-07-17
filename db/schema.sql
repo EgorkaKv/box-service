@@ -103,6 +103,7 @@ CREATE TABLE IF NOT EXISTS box_template (
 
 CREATE TYPE BOX_STATUS AS ENUM('draft', 'active', 'reserved', 'sold', 'expired', 'cancelled');
 
+-- TODO: добавить поле storeImgageUrl
 -- 3. СОЗДАНИЕ ДЕНОРМАЛИЗОВАННОЙ ТАБЛИЦЫ SURPRISE_BOX
 CREATE TABLE IF NOT EXISTS surprise_box (
 	id BIGSERIAL PRIMARY KEY,
