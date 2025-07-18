@@ -8,7 +8,8 @@ import {AuthResponseDto} from '../dto/auth-response.dto';
 import {RegisterEmployeeDto, RegisterEmployeeResponseDto} from '../dto/register-employee.dto';
 import {EmployeeRole, StoreCredential} from '../entities/store-credential.entity';
 import {ChangeCredentialsResponseDto, ChangeLoginDto, ChangePasswordDto} from '../dto/change-credentials.dto';
-import { AppLogger } from '../../common/logger/app-logger.service';
+import { AppLogger } from '@common/logger/app-logger.service';
+import { EmployeeJwtPayload } from '../interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -58,14 +59,12 @@ export class AuthService {
     // Успешная авторизация
     await this.authRepository.updateLastLogin(storeCredential.id);
 
-    this.logger.logAuth('login_success', storeCredential.id, storeCredential.store.id);
-
-    // Генерация токенов
-    const payload = {
+    // Создать типизированный payload для employee
+    const payload: EmployeeJwtPayload = {
       sub: storeCredential.id,
       storeId: storeCredential.store.id,
       login: storeCredential.login,
-      type: 'store_employee',
+      type: 'employee',
     };
 
     const accessToken = this.jwtService.sign(payload, {
@@ -73,7 +72,12 @@ export class AuthService {
     });
 
     const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN', '7d'),
+      expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d'),
+    });
+
+    this.logger.log(`Login successful for user: ${login}`, 'AuthService', {
+      storeId: storeCredential.store.id,
+      role: 'employee',
     });
 
     return {
@@ -86,23 +90,28 @@ export class AuthService {
   }
 
   async refreshToken(refreshToken: string): Promise<AuthResponseDto> {
-    try {
-      this.logger.debug('Попытка обновления токена', 'AuthService');
-      const payload = this.jwtService.verify(refreshToken);
+    this.logger.debug('Token refresh attempt');
 
-      // Проверить, что токен еще действителен
-      const storeCredential = await this.authRepository.findByLogin(payload.login);
+    try {
+      const payload = this.jwtService.verify(refreshToken) as EmployeeJwtPayload;
+
+      if (payload.type !== 'employee') {
+        throw new UnauthorizedException('Invalid token type');
+      }
+
+      // Проверить, что учетные данные существуют
+      const storeCredential = await this.authRepository.findById(payload.sub);
       if (!storeCredential) {
         this.logger.warn(`Обновление токена отклонено: пользователь ${payload.login} не найден`, 'AuthService');
         throw new UnauthorizedException('Недействительный токен');
       }
 
-      // Генерировать новые токены
-      const newPayload = {
+      // Создать новые токены с обновленными данными
+      const newPayload: EmployeeJwtPayload = {
         sub: storeCredential.id,
         storeId: storeCredential.store.id,
         login: storeCredential.login,
-        type: 'store_employee',
+        type: 'employee',
       };
 
       const newAccessToken = this.jwtService.sign(newPayload, {
@@ -110,10 +119,13 @@ export class AuthService {
       });
 
       const newRefreshToken = this.jwtService.sign(newPayload, {
-        expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN', '7d'),
+        expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d'),
       });
 
-      this.logger.log('token_refreshed', 'AuthService', { credentialId: storeCredential.id, storeId: storeCredential.store.id} );
+      this.logger.log('Token refresh successful', 'AuthService', {
+        credentialId: storeCredential.id,
+        storeId: storeCredential.store.id,
+      });
 
       return {
         accessToken: newAccessToken,
@@ -122,9 +134,11 @@ export class AuthService {
         login: storeCredential.login,
         expiresIn: 15 * 60,
       };
-    } catch (error) {
-      this.logger.warn('Обновление токена не удалось', 'AuthService', { errorMessage: error.message });
-      throw new UnauthorizedException('Недействительный refresh token');
+    } catch (error: any) {
+      this.logger.warn('Token refresh failed', 'AuthService', {
+        error: error.message,
+      });
+      throw new UnauthorizedException('Недействительный токен обновления');
     }
   }
 

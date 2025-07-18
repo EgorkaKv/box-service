@@ -1,7 +1,7 @@
 import {Controller, Get, Query, ParseIntPipe, UseGuards, Param} from '@nestjs/common';
 import { OrderService } from '../services/order.service';
 import { OrderResponseDto } from '../dto/order-response.dto';
-import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
+import { EmployeeJwtAuthGuard } from '@auth/guards/employee-jwt-auth-guard.service';
 import { PaginatedResponseDto } from '@common/pagination/pagination.dto';
 import { AppLogger } from '@common/logger/app-logger.service';
 
@@ -13,7 +13,7 @@ export class AdminOrderController {
   ) {}
 
   @Get('customer/:customerId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(EmployeeJwtAuthGuard)
   async findOrdersByCustomer(
     @Param('customerId', ParseIntPipe) customerId: number,
     @Query('page', ParseIntPipe) page=1,
@@ -28,7 +28,7 @@ export class AdminOrderController {
   }
 
   @Get('store/:storeId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(EmployeeJwtAuthGuard)
   async findOrdersByStoreId(
     @Param('storeId', ParseIntPipe) storeId: number,
     @Query('page', ParseIntPipe) page: number = 1,

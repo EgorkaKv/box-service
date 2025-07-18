@@ -1,7 +1,7 @@
 import {Controller, Post, Body, UseGuards, Req, Query, Get, ParseIntPipe, Param} from '@nestjs/common';
 import { OrderService } from '../services/order.service';
 import { CompleteOrderDto } from '../dto/complete-order.dto';
-import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
+import { EmployeeJwtAuthGuard } from '@auth/guards/employee-jwt-auth-guard.service';
 import { AppLogger } from '@common/logger/app-logger.service';
 import {PaginatedResponseDto} from "@common/pagination/pagination.dto";
 import {OrderResponseDto} from "@order/dto/order-response.dto";
@@ -17,7 +17,7 @@ export class StoreOrderController {
    * Завершение заказа магазином
    */
   @Post('complete')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(EmployeeJwtAuthGuard)
   async completeOrder(@Req() req: any, @Body() completeOrderDto: CompleteOrderDto): Promise<void> {
     this.logger.log('Received request to complete order', 'StoreOrderController');
 
@@ -35,7 +35,7 @@ export class StoreOrderController {
 
   // FIXME: не понятно что возвращает этот роут, нужно уточнить
   @Get('store')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(EmployeeJwtAuthGuard)
   async getStoreOrders(
     @Req() req: any,
     @Query('page', ParseIntPipe) page=1,
@@ -51,7 +51,7 @@ export class StoreOrderController {
   }
 
   @Get('pickup-code/:pickupCode')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(EmployeeJwtAuthGuard)
   async findOrderByPickupCode( @Req() req: any, @Param('pickupCode') pickupCode: string):
     Promise<OrderResponseDto> {
 

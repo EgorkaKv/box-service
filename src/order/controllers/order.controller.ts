@@ -4,7 +4,7 @@ import { OrderResponseDto } from '../dto/order-response.dto';
 import { ReserveBoxDto } from '../dto/reserve-box.dto';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { CancellerType } from '../entities/order.entity';
-import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
+import { EmployeeJwtAuthGuard } from '@auth/guards/employee-jwt-auth-guard.service';
 import { PaginatedResponseDto } from "@common/pagination/pagination.dto";
 import { AppLogger } from '@common/logger/app-logger.service';
 
@@ -19,7 +19,7 @@ export class OrderController {
     * Резервирование бокса для заказа
    */
   @Post('reserve')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(EmployeeJwtAuthGuard)
   async reserveBox(@Body() reserveBoxDto: ReserveBoxDto): Promise<{expiresAt: string | null}> {
     this.logger.log('Received request to reserve box', 'OrderController');
 
@@ -34,7 +34,7 @@ export class OrderController {
    * создание нового заказа из зарезервированного бокса
    */
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(EmployeeJwtAuthGuard)
   async createOrder(@Body() createOrderDto: CreateOrderDto): Promise<{ orderId: any, pickupCode: any }> {
     this.logger.log('Received request to create order', 'OrderController');
 
@@ -46,7 +46,7 @@ export class OrderController {
 
 
   @Get('active')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(EmployeeJwtAuthGuard)
   async getActiveOrders( @Req() req: any, @Query('page', ParseIntPipe) page=1, @Query('limit', ParseIntPipe) limit=20
   ): Promise<PaginatedResponseDto<OrderResponseDto>> {
 
@@ -61,7 +61,7 @@ export class OrderController {
 
 
   @Get('history')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(EmployeeJwtAuthGuard)
   async getOrderHistory(
     @Req() req: any,
     @Query('page', ParseIntPipe) page: number = 1,
@@ -78,7 +78,7 @@ export class OrderController {
 
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(EmployeeJwtAuthGuard)
   async findOrderById(@Param('id', ParseIntPipe) id: number): Promise<OrderResponseDto> {
     this.logger.log('Received request to get order by ID', 'OrderController');
 
@@ -89,7 +89,7 @@ export class OrderController {
   }
 
   @Put(':id/cancel')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(EmployeeJwtAuthGuard)
   async cancelOrderManual(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { cancelledBy: CancellerType },

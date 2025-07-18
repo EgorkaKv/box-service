@@ -1,0 +1,46 @@
+### Авторизация клиента через Firebase SMS
+POST {{baseUrl}}/auth/customer/verify-token
+Content-Type: application/json
+
+{
+  "idToken": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjVkNzlkMjBjZGZmZGZmZGU2NzJkYjU5YWJkOGViNjQ1YjM3ZGY3YjEiLCJ0eXAiOiJKV1QifQ..."
+}
+
+### Обновление токена клиента
+POST {{baseUrl}}/auth/customer/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+
+### Тестовая авторизация клиента (для разработки)
+POST {{baseUrl}}/auth/customer/test
+
+### Тестовая авторизация с конкретным ID клиента
+POST {{baseUrl}}/auth/customer/test/5
+
+### Декодирование JWT токена
+POST {{baseUrl}}/auth/customer/decode-jwt
+Content-Type: application/json
+
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+
+### Тест защищенного эндпоинта с авторизацией клиента
+GET {{baseUrl}}/orders/active
+Authorization: Bearer {{customerAccessToken}}
+
+### Тест создания заказа с авторизацией клиента
+POST {{baseUrl}}/orders
+Authorization: Bearer {{customerAccessToken}}
+Content-Type: application/json
+
+{
+  "customerId": 1,
+  "boxId": 1,
+  "storeId": 1,
+  "paymentType": "app",
+  "fulfillmentType": "pickup"
+}

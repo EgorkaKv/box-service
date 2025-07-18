@@ -1,10 +1,10 @@
 import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
-import { AppLogger } from '../../common/logger/app-logger.service';
+import { AppLogger } from '@common/logger/app-logger.service';
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {
+export class EmployeeJwtAuthGuard extends AuthGuard('employee-jwt') {
   constructor(private readonly logger: AppLogger) {
     super();
   }
@@ -13,7 +13,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const request = context.switchToHttp().getRequest();
     const { method, url } = request;
 
-    this.logger.debug(`JWT Auth Guard: проверка доступа ${method} ${url}`, 'JwtAuthGuard');
+    this.logger.debug(`Employee JWT Auth Guard: проверка доступа ${method} ${url}`, 'EmployeeJwtAuthGuard');
 
     return super.canActivate(context);
   }
@@ -25,19 +25,17 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     // Если есть ошибка или пользователь не определен
     if (err || !user) {
       const errorMessage = err?.message || 'Доступ запрещен';
-      this.logger.warn(`JWT Auth Guard: доступ отклонен ${method} ${url}`, 'JwtAuthGuard', {
+      this.logger.warn(`Employee JWT Auth Guard: доступ отклонен ${method} ${url}`, 'EmployeeJwtAuthGuard', {
         errorType: err?.name || 'Unauthorized',
         errorMessage: errorMessage,
         hasUser: !!user
       });
-      throw err || new UnauthorizedException(errorMessage);
+      throw new UnauthorizedException(errorMessage);
     }
 
-    // Если авторизация успешна
-    this.logger.debug(`JWT Auth Guard: доступ разрешен ${method} ${url}`, 'JwtAuthGuard', {
-      userId: user.credentialId,
-      storeId: user.storeId,
-      login: user.login
+    this.logger.debug(`Employee JWT Auth Guard: доступ разрешен ${method} ${url}`, 'EmployeeJwtAuthGuard', {
+      credentialId: user.credentialId,
+      storeId: user.storeId
     });
 
     return user;
