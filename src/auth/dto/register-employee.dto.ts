@@ -17,13 +17,5 @@ export class RegisterEmployeeDto {
 
   @IsEnum(EmployeeRole, { message: 'Роль должна быть staff или manager' })
   @IsOptional()
-  role?: EmployeeRole = EmployeeRole.STAFF;
-}
-
-export class RegisterEmployeeResponseDto {
-  id: number;
-  storeId: number;
-  login: string;
-  employeeRole: EmployeeRole;
-  createdAt: Date;
+  role: EmployeeRole = EmployeeRole.STAFF;
 }

@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthController } from './controllers/auth.controller';
+import { StoreAuthController } from './controllers/store.auth.controller';
 import { AuthService } from './services/auth.service';
 import { CustomerAuthService } from './services/customer-auth.service';
 import { AuthRepository } from './repositories/auth.repository';
@@ -29,7 +29,7 @@ import { CustomerModule } from '@customer/customer.module';
     }),
     CustomerModule, // Добавляем CustomerModule для доступа к CustomerRepository
   ],
-  controllers: [AuthController],
+  controllers: [StoreAuthController],
   providers: [
     AuthService,
     CustomerAuthService,

@@ -1,7 +1,7 @@
 import {Controller, Get, Query, ParseIntPipe, UseGuards, Param} from '@nestjs/common';
 import { OrderService } from '../services/order.service';
 import { OrderResponseDto } from '../dto/order-response.dto';
-import { EmployeeJwtAuthGuard } from '@auth/guards/employee-jwt-auth-guard.service';
+import { EmployeeJwtAuthGuard } from '@auth/guards/employee-jwt-auth.guard';
 import { PaginatedResponseDto } from '@common/pagination/pagination.dto';
 import { AppLogger } from '@common/logger/app-logger.service';
 

@@ -4,7 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { AppLogger } from '@common/logger/app-logger.service';
-import { AdminJwtPayload } from '../interfaces/jwt-payload.interface';
+import { AdminJwtPayload } from '../entities/jwt-payload.interface';
 
 @Injectable()
 export class AdminJwtStrategy extends PassportStrategy(Strategy, 'admin-jwt') {

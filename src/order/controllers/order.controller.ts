@@ -4,7 +4,7 @@ import { OrderResponseDto } from '../dto/order-response.dto';
 import { ReserveBoxDto } from '../dto/reserve-box.dto';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { CancellerType } from '../entities/order.entity';
-import { EmployeeJwtAuthGuard } from '@auth/guards/employee-jwt-auth-guard.service';
+import { EmployeeJwtAuthGuard } from '@auth/guards/employee-jwt-auth.guard';
 import { PaginatedResponseDto } from "@common/pagination/pagination.dto";
 import { AppLogger } from '@common/logger/app-logger.service';
 

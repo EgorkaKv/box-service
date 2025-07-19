@@ -1,4 +1,4 @@
-// filepath: src/auth/interfaces/jwt-payload.interface.ts
+import {EmployeeRole} from "@auth/entities/store-credential.entity";
 
 /**
  * Базовый интерфейс для всех JWT payload
@@ -16,7 +16,7 @@ export interface EmployeeJwtPayload extends BaseJwtPayload {
   sub: number; // credential ID
   storeId: number;
   login: string;
-  type: 'employee';
+  type: EmployeeRole;
 }
 
 /**

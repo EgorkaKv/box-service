@@ -8,7 +8,7 @@ export class ChangeLoginDto {
 
   @IsEnum(EmployeeRole, { message: 'Роль должна быть staff или manager' })
   @IsOptional()
-  role?: EmployeeRole = EmployeeRole.STAFF;
+  role: EmployeeRole = EmployeeRole.STAFF;
 
   @IsString()
   @IsNotEmpty({ message: 'Новый логин обязателен' })
@@ -28,12 +28,4 @@ export class ChangePasswordDto {
   @IsNotEmpty({ message: 'Новый пароль обязателен' })
   @MinLength(6, { message: 'Пароль должен содержать минимум 6 символов' })
   newPassword: string;
-}
-
-export class ChangeCredentialsResponseDto {
-  success: boolean;
-  message: string;
-  affectedRows: number;
-  storeId: number;
-  employeeRole: EmployeeRole;
 }

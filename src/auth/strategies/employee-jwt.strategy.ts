@@ -4,7 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../services/auth.service';
 import { AppLogger } from '@common/logger/app-logger.service';
-import { EmployeeJwtPayload } from '../interfaces/jwt-payload.interface';
+import { EmployeeJwtPayload } from '../entities/jwt-payload.interface';
 
 @Injectable()
 export class EmployeeJwtStrategy extends PassportStrategy(Strategy, 'employee-jwt') {
@@ -28,7 +28,7 @@ export class EmployeeJwtStrategy extends PassportStrategy(Strategy, 'employee-jw
       type: payload.type,
     });
 
-    if (!payload.sub || !payload.storeId || payload.type !== 'employee') {
+    if (!payload.sub || !payload.storeId ) {
       this.logger.warn('Invalid employee token format', 'EmployeeJwtStrategy', {
         hasSub: !!payload.sub,
         hasStoreId: !!payload.storeId,

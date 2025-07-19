@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {Repository, UpdateResult} from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { StoreCredential, EmployeeRole } from '../entities/store-credential.entity';
-import { AppLogger } from '../../common/logger/app-logger.service';
+import { AppLogger } from '@common/logger/app-logger.service';
 
 @Injectable()
 export class AuthRepository {
@@ -16,52 +16,115 @@ export class AuthRepository {
    * Поиск учетных данных по логину
    */
   async findByLogin(login: string): Promise<StoreCredential | null> {
-    this.logger.logDatabase('query', 'StoreCredential', undefined, 'AuthRepository', {
-      operation: 'findByLogin',
-      login
-    });
-    return this.storeCredentialRepository.findOne({
+    this.logger.debug('Finding credentials by login', 'AuthRepository', { login });
+
+    const credential = await this.storeCredentialRepository.findOne({
       where: { login },
       relations: ['store'],
     });
+
+    this.logger.debug('Credentials search completed', 'AuthRepository', {
+      login,
+      found: !!credential,
+      credentialId: credential?.id
+    });
+
+    return credential;
   }
 
   /**
    * Поиск учетных данных по ID
    */
   async findById(id: number): Promise<StoreCredential | null> {
-    this.logger.logDatabase('query', 'StoreCredential', undefined, 'AuthRepository', {
-      operation: 'findById',
-      id
-    });
-    return this.storeCredentialRepository.findOne({
+    this.logger.debug('Finding credentials by ID', 'AuthRepository', { credentialId: id });
+
+    const credential = await this.storeCredentialRepository.findOne({
       where: { id },
       relations: ['store'],
     });
+
+    this.logger.debug('Credentials search by ID completed', 'AuthRepository', {
+      credentialId: id,
+      found: !!credential
+    });
+
+    return credential;
+  }
+
+  async findByStoreAndRole(storeId: number, role: EmployeeRole): Promise<StoreCredential | null> {
+    this.logger.debug('Finding credentials by store and role', 'AuthRepository', { storeId, role });
+
+    const credential = await this.storeCredentialRepository.findOne({
+      where: { store: {id: storeId}, employeeRole: role },
+      relations: ['store'],
+    });
+
+    this.logger.debug('Credentials search by store and role completed', 'AuthRepository', {
+      storeId,
+      role,
+      found: !!credential
+    });
+
+    return credential;
+  }
+
+  async findByStoreId(storeId: number): Promise<StoreCredential[]> {
+    this.logger.debug('Finding credentials by store ID', 'AuthRepository', { storeId });
+
+    const credentials = await this.storeCredentialRepository.find({
+      where: { store: { id: storeId } },
+      relations: ['store'],
+    });
+
+    this.logger.debug('Credentials search by store ID completed', 'AuthRepository', {
+      storeId,
+      count: credentials.length
+    });
+
+    return credentials;
+  }
+
+  /**
+   * Создание новых учетных данных
+   */
+  async create(credentialData: Partial<StoreCredential>): Promise<StoreCredential> {
+    this.logger.debug('Creating new credentials', 'AuthRepository', {
+      login: credentialData.login,
+      storeId: credentialData.store?.id,
+      role: credentialData.employeeRole
+    });
+
+    const newCredential = this.storeCredentialRepository.create(credentialData);
+    this.logger.debug('New credential entity created', 'AuthRepository')
+    const savedCredential = await this.storeCredentialRepository.save(newCredential);
+
+    this.logger.debug('Credentials created successfully', 'AuthRepository', {
+      credentialId: savedCredential.id, login: savedCredential.login
+    });
+
+    return savedCredential;
   }
 
   /**
    * Обновление времени последнего входа и сброс попыток входа
    */
-  async updateLastLogin(id: number): Promise<void> {
-    const startTime = Date.now();
+  async setSuccessLogin(id: number): Promise<void> {
+    this.logger.debug('Setting success Login start', 'AuthRepository', { credentialId: id });
+
     await this.storeCredentialRepository.update(id, {
       lastLogin: new Date(),
       loginAttempts: 0,
-      lastFailedLogin: undefined,
     });
-    const duration = Date.now() - startTime;
-    this.logger.logDatabase('update', 'StoreCredential', duration, 'AuthRepository', {
-      operation: 'updateLastLogin',
-      id
-    });
+
+    this.logger.debug('Setting success Login completed', 'AuthRepository', { credentialId: id });
   }
 
   /**
    * Увеличение количества неудачных попыток входа
    */
   async incrementLoginAttempts(id: number): Promise<void> {
-    const startTime = Date.now();
+    this.logger.debug('Incrementing login attempts', 'AuthRepository', { credentialId: id });
+
     await this.storeCredentialRepository
       .createQueryBuilder()
       .update(StoreCredential)
@@ -71,196 +134,45 @@ export class AuthRepository {
       })
       .where('id = :id', { id })
       .execute();
-    const duration = Date.now() - startTime;
-    this.logger.logDatabase('update', 'StoreCredential', duration, 'AuthRepository', {
-      operation: 'incrementLoginAttempts',
-      id
-    });
+
+    this.logger.debug('Login attempts incremented', 'AuthRepository', { credentialId: id });
   }
 
-  /**
-   * Сброс попыток входа
-   */
-  async resetLoginAttempts(id: number): Promise<void> {
-    const startTime = Date.now();
-    await this.storeCredentialRepository.update(id, {
-      loginAttempts: 0,
-      lastFailedLogin: undefined,
-    });
-    const duration = Date.now() - startTime;
-    this.logger.logDatabase('update', 'StoreCredential', duration, 'AuthRepository', {
-      operation: 'resetLoginAttempts',
-      id
-    });
-  }
+  async updateLogin(storeId: number, role: EmployeeRole, newLogin: string): Promise<UpdateResult> {
+    this.logger.debug('Updating login', 'AuthRepository', { storeId, role, newLogin });
 
-  /**
-   * Получение всех учетных данных для конкретного магазина
-   */
-  async findByStoreId(storeId: number): Promise<StoreCredential[]> {
-    this.logger.logDatabase('query', 'StoreCredential', undefined, 'AuthRepository', {
-      operation: 'findByStoreId',
-      storeId
-    });
-    return this.storeCredentialRepository.find({
-      where: { store: { id: storeId } },
-      relations: ['store'],
-      order: {
-        createdAt: 'DESC',
-      },
-    });
-  }
-
-  /**
-   * Поиск учетных данных по ID магазина и роли
-   */
-  async findByStoreAndRole(storeId: number, employeeRole: EmployeeRole): Promise<StoreCredential | null> {
-    this.logger.logDatabase('query', 'StoreCredential', undefined, 'AuthRepository', {
-      operation: 'findByStoreAndRole',
-      storeId,
-      employeeRole
-    });
-    return this.storeCredentialRepository.findOne({
-      where: {
-        store: { id: storeId },
-        employeeRole
-      },
-      relations: ['store'],
-    });
-  }
-
-  /**
-   * Обновление логина для конкретного магазина и роли
-   */
-  async updateLogin(storeId: number, employeeRole: EmployeeRole, newLogin: string): Promise<UpdateResult> {
-    const startTime = Date.now();
     const result = await this.storeCredentialRepository.update(
-      { store: {id: storeId}, employeeRole },
+      { store: {id:storeId}, employeeRole: role },
       { login: newLogin }
     );
-    const duration = Date.now() - startTime;
-    this.logger.logDatabase('update', 'StoreCredential', duration, 'AuthRepository', {
-      operation: 'updateLogin',
+
+    this.logger.debug('Login update completed', 'AuthRepository', {
       storeId,
-      employeeRole,
-      newLogin,
-      affected: result.affected
+      role,
+      affectedRows: result.affected
     });
+
     return result;
   }
 
   /**
    * Обновление пароля для конкретного магазина и роли
    */
-  async updatePassword(storeId: number, employeeRole: EmployeeRole, newPasswordHash: string): Promise<UpdateResult> {
-    const startTime = Date.now();
+  async updatePassword(storeId: number, role: EmployeeRole, passwordHash: string): Promise<UpdateResult> {
+    this.logger.debug('Updating password hash', 'AuthRepository', { storeId, role });
+
     const result = await this.storeCredentialRepository.update(
-      { store: {id: storeId}, employeeRole },
-      { passwordHash: newPasswordHash }
+      { store: {id:storeId}, employeeRole: role },
+      { passwordHash, loginAttempts: 0 }
     );
-    const duration = Date.now() - startTime;
-    this.logger.logDatabase('update', 'StoreCredential', duration, 'AuthRepository', {
-      operation: 'updatePassword',
+
+    this.logger.debug('Password update completed', 'AuthRepository', {
       storeId,
-      employeeRole,
-      affected: result.affected
+      role,
+      affectedRows: result.affected
     });
+
     return result;
   }
 
-  /**
-   * Создание новых учетных данных
-   */
-  async create(credentialData: Partial<StoreCredential>): Promise<StoreCredential> {
-    const startTime = Date.now();
-    const credential = this.storeCredentialRepository.create(credentialData);
-    const result = await this.storeCredentialRepository.save(credential);
-    const duration = Date.now() - startTime;
-    this.logger.logDatabase('create', 'StoreCredential', duration, 'AuthRepository', {
-      operation: 'create',
-      storeId: credentialData.store?.id,
-      employeeRole: credentialData.employeeRole,
-      resultId: result.id
-    });
-    return result;
-  }
-
-  /**
-   * Обновление учетных данных
-   */
-  async update(id: number, updateData: Omit<Partial<StoreCredential>, 'id' | 'store' | 'createdAt' | 'updatedAt'>): Promise<void> {
-    const startTime = Date.now();
-    await this.storeCredentialRepository.update(id, updateData);
-    const duration = Date.now() - startTime;
-    this.logger.logDatabase('update', 'StoreCredential', duration, 'AuthRepository', {
-      operation: 'update',
-      id
-    });
-  }
-
-  /**
-   * Удаление учетных данных
-   */
-  async delete(id: number): Promise<void> {
-    const startTime = Date.now();
-    await this.storeCredentialRepository.delete(id);
-    const duration = Date.now() - startTime;
-    this.logger.logDatabase('delete', 'StoreCredential', duration, 'AuthRepository', {
-      operation: 'delete',
-      id
-    });
-  }
-
-  /**
-   * Проверка существования логина
-   */
-  async existsByLogin(login: string): Promise<boolean> {
-    const startTime = Date.now();
-    const count = await this.storeCredentialRepository.count({
-      where: { login },
-    });
-    const duration = Date.now() - startTime;
-    this.logger.logDatabase('query', 'StoreCredential', duration, 'AuthRepository', {
-      operation: 'existsByLogin',
-      login,
-      exists: count > 0
-    });
-    return count > 0;
-  }
-
-  /**
-   * Проверка существования роли для магазина
-   */
-  async existsByStoreAndRole(storeId: number, employeeRole: EmployeeRole): Promise<boolean> {
-    const startTime = Date.now();
-    const count = await this.storeCredentialRepository.count({
-      where: {
-        store: { id: storeId },
-        employeeRole
-      },
-    });
-    const duration = Date.now() - startTime;
-    this.logger.logDatabase('query', 'StoreCredential', duration, 'AuthRepository', {
-      operation: 'existsByStoreAndRole',
-      storeId,
-      employeeRole,
-      exists: count > 0
-    });
-    return count > 0;
-  }
-
-  /**
-   * Получение заблокированных аккаунтов
-   */
-  async findLockedAccounts(maxAttempts: number = 5): Promise<StoreCredential[]> {
-    this.logger.logDatabase('query', 'StoreCredential', undefined, 'AuthRepository', {
-      operation: 'findLockedAccounts',
-      maxAttempts
-    });
-    return this.storeCredentialRepository
-      .createQueryBuilder('credential')
-      .where('credential.login_attempts >= :maxAttempts', { maxAttempts })
-      .andWhere('credential.last_failed_login IS NOT NULL')
-      .getMany();
-  }
 }
