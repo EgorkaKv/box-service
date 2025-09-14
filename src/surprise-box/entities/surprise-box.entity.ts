@@ -1,14 +1,5 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  Index,
-  OneToMany
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne,
+  JoinColumn, CreateDateColumn, UpdateDateColumn, Index, OneToMany } from 'typeorm';
 import { BoxTemplate } from '@box-template/entities/box-template.entity';
 import { Store } from '@store/entities/store.entity';
 import { Category } from '@category/entities/category.entity';

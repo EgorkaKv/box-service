@@ -212,9 +212,7 @@ export class OrderService {
     // Создаем пагинированный ответ
     return this.paginationService.createPaginatedResponse(
       ordersDto,
-      total,
-      pagination.page,
-      pagination.limit,
+      pagination,
       filters.sortBy,
       filters.sortOrder,
       activeFilters

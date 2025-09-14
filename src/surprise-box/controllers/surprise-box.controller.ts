@@ -1,110 +1,119 @@
-import {
-  Controller,
-  Get,
-  Param,
-  ParseIntPipe,
-  Query,
-  ParseFloatPipe
-} from '@nestjs/common';
+import { Controller, Get, Param, Query, ParseIntPipe, HttpCode, HttpStatus } from '@nestjs/common';
+import { CustomerSurpriseBoxService } from '../services/customer-surprise-box.service';
 import { SurpriseBoxService } from '../services/surprise-box.service';
-import { SurpriseBoxResponseDto } from '../dto/surprise-box-response.dto';
 import { PaginatedResponseDto } from '@common/pagination/pagination.dto';
+import { SurpriseBoxResponseDto } from '../dto/surprise-box-response.dto';
+import {
+  GetBoxesByCityFiltersDto,
+  GetBoxesByStoreFiltersDto,
+  GetNearbyBoxesFiltersDto
+} from "../dto/get-surprise-boxes-filters.dto";
 import { AppLogger } from '@common/logger/app-logger.service';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
+
+@ApiTags('Surprise Boxes')
 @Controller('boxes')
 export class SurpriseBoxController {
   constructor(
     private readonly surpriseBoxService: SurpriseBoxService,
+    private readonly customerService: CustomerSurpriseBoxService,
     private readonly logger: AppLogger,
   ) {}
 
   /**
-   * Получить боксы рядом с заданными координатами
+   * Получить боксы рядом с координатами
+   * GET /api/v1/boxes/nearby?latitude=...&longitude=...&radius=...
    */
   @Get('nearby')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get surprise boxes near coordinates' })
+  @ApiResponse({ status: 200, description: 'List of nearby boxes' })
   async getNearbyBoxes(
-    @Query('latitude', ParseFloatPipe) latitude: number,
-    @Query('longitude', ParseFloatPipe) longitude: number,
-    @Query('radius', ParseFloatPipe) radius: number,
-  ): Promise<SurpriseBoxResponseDto[]> {
-    this.logger.log('Received request to get nearby boxes', 'SurpriseBoxController');
+    @Query() filters: GetNearbyBoxesFiltersDto
+  ): Promise<PaginatedResponseDto<SurpriseBoxResponseDto>> {
+    this.logger.log('Request: Get nearby boxes', 'SurpriseBoxController', {
+      latitude: filters.latitude,
+      longitude: filters.longitude,
+      radius: filters.radius
+    });
 
-    const result = await this.surpriseBoxService.getNearbyBoxes(latitude, longitude, radius);
+    const result = await this.customerService.getNearbyBoxes(filters);
 
-    this.logger.log('Nearby boxes request completed', 'SurpriseBoxController');
+    this.logger.log('Response: Nearby boxes retrieved', 'SurpriseBoxController', {
+      totalFound: result.pagination.total
+    });
+
     return result;
   }
 
   /**
    * Получить боксы по городу
+   * GET /api/v1/boxes/cities/:cityId
    */
-  @Get('city/:cityId')
-  async getBoxesByCity(@Param('cityId') cityId: string): Promise<SurpriseBoxResponseDto[]> {
-    this.logger.log('Received request to get boxes by city', 'SurpriseBoxController');
+  @Get('cities/:cityId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get surprise boxes by city' })
+  async getBoxesByCity(
+    @Param('cityId') cityId: string,
+    @Query() query: Omit<GetBoxesByCityFiltersDto, 'cityId'>
+  ): Promise<PaginatedResponseDto<SurpriseBoxResponseDto>> {
+    this.logger.log('Request: Get boxes by city', 'SurpriseBoxController', { cityId });
 
-    const result = await this.surpriseBoxService.getBoxesByCity(cityId);
+    const filters: GetBoxesByCityFiltersDto = { ...query, cityId };
+    const result = await this.customerService.getBoxesByCity(filters);
 
-    this.logger.log('Boxes by city request completed', 'SurpriseBoxController');
+    this.logger.log('Response: City boxes retrieved', 'SurpriseBoxController', {
+      cityId,
+      totalFound: result.pagination.total
+    });
+
     return result;
   }
 
   /**
-   * Получить все активные боксы
+   * Получить боксы по магазину
+   * GET /api/v1/boxes/stores/:storeId
    */
-  @Get('all')
-  async getAllBoxes(): Promise<SurpriseBoxResponseDto[]> {
-    this.logger.log('Received request to get all boxes', 'SurpriseBoxController');
-
-    const result = await this.surpriseBoxService.getAllBoxes();
-
-    this.logger.log('All boxes request completed', 'SurpriseBoxController');
-    return result;
-  }
-
-  /**
-   * Получить активные боксы по магазину с пагинацией
-   */
-  @Get('store/:storeId')
-  async getActiveBoxesByStore(
+  @Get('stores/:storeId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get surprise boxes by store' })
+  async getBoxesByStore(
     @Param('storeId', ParseIntPipe) storeId: number,
-    @Query('page', ParseIntPipe) page: number = 1,
-    @Query('limit', ParseIntPipe) limit: number = 20
+    @Query() query: Omit<GetBoxesByStoreFiltersDto, 'storeId'>
   ): Promise<PaginatedResponseDto<SurpriseBoxResponseDto>> {
-    this.logger.log('Received request to get active boxes by store', 'SurpriseBoxController');
+    this.logger.log('Request: Get boxes by store', 'SurpriseBoxController', { storeId });
 
-    const result = await this.surpriseBoxService.getBoxesByStore(storeId, page, limit);
+    const filters: GetBoxesByStoreFiltersDto = { ...query, storeId };
+    const result = await this.customerService.getBoxesByStore(filters);
 
-    this.logger.log('Active boxes by store request completed', 'SurpriseBoxController');
-    return result;
-  }
+    this.logger.log('Response: Store boxes retrieved', 'SurpriseBoxController', {
+      storeId,
+      totalFound: result.pagination.total
+    });
 
-  /**
-   * Получить боксы по категории с пагинацией
-   */
-  @Get('category/:categoryId')
-  async getBoxesByCategory(
-    @Param('categoryId', ParseIntPipe) categoryId: number,
-    @Query('page', ParseIntPipe) page: number = 1,
-    @Query('limit', ParseIntPipe) limit: number = 20
-  ): Promise<PaginatedResponseDto<SurpriseBoxResponseDto>> {
-    this.logger.log('Received request to get boxes by category', 'SurpriseBoxController');
-
-    const result = await this.surpriseBoxService.getBoxesByCategory(categoryId, page, limit);
-
-    this.logger.log('Boxes by category request completed', 'SurpriseBoxController');
     return result;
   }
 
   /**
    * Получить конкретный бокс по ID
+   * GET /api/v1/boxes/:boxId
    */
   @Get(':boxId')
-  async getBoxById(@Param('boxId', ParseIntPipe) boxId: number): Promise<SurpriseBoxResponseDto> {
-    this.logger.log('Received request to get box by ID', 'SurpriseBoxController');
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get surprise box by ID' })
+  async getBoxById(
+    @Param('boxId', ParseIntPipe) boxId: number
+  ): Promise<SurpriseBoxResponseDto> {
+    this.logger.log('Request: Get box by ID', 'SurpriseBoxController', { boxId });
 
     const result = await this.surpriseBoxService.getBoxById(boxId);
 
-    this.logger.log('Get box by ID request completed', 'SurpriseBoxController');
+    this.logger.log('Response: Box retrieved by ID', 'SurpriseBoxController', {
+      boxId,
+      status: result.status
+    });
+
     return result;
   }
 }

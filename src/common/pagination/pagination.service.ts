@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PaginatedResponseDto } from './pagination.dto';
 
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+}
+
 @Injectable()
 export class PaginationService {
 
@@ -9,18 +15,16 @@ export class PaginationService {
    */
   createPaginatedResponse<T>(
     data: T[],
-    total: number,
-    page: number,
-    limit: number,
+    pagination: PaginationInfo,
     sortBy?: string,
     sortOrder?: 'ASC' | 'DESC',
     filters?: Record<string, any>
   ): PaginatedResponseDto<T> {
     return new PaginatedResponseDto(
       data,
-      total,
-      page,
-      limit,
+      pagination.total,
+      pagination.page,
+      pagination.limit,
       sortBy,
       sortOrder,
       filters
