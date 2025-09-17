@@ -26,13 +26,13 @@ async function bootstrap() {
     .addTag('Store Authentication', 'Employee authentication endpoints')
     .addTag('Customer Authentication', 'Customer authentication endpoints')
     .addTag('Orders', 'Order management endpoints')
-    .addTag('Customers', 'Customer management endpoints')
-    .addTag('Stores', 'Store management endpoints')
-    .addTag('Categories', 'Category management endpoints')
-    .addTag('Box Templates', 'Box template management endpoints')
+    // .addTag('Customers', 'Customer management endpoints')
+    // .addTag('Stores', 'Store management endpoints')
+    // .addTag('Categories', 'Category management endpoints')
+    // .addTag('Box Templates', 'Box template management endpoints')
     .addTag('Surprise Boxes', 'Surprise box management endpoints')
-    .addTag('Reviews', 'Review management endpoints')
-    .addTag('Reports', 'Customer report endpoints')
+    // .addTag('Reviews', 'Review management endpoints')
+    // .addTag('Reports', 'Customer report endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

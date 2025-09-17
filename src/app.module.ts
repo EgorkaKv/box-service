@@ -12,7 +12,7 @@ import { ReviewModule } from '@review/review.module';
 import { CustomerReportModule } from '@customer-report/customer-report.module';
 import { BoxTemplateModule } from '@box-template/box-template.module';
 import { CategoryModule } from '@category/category.module';
-import { LoggerModule } from './common/logger/logger.module';
+import { LoggerModule } from '@common/logger/logger.module';
 
 @Module({
   imports: [
@@ -30,7 +30,7 @@ import { LoggerModule } from './common/logger/logger.module';
               password: config.get('DATABASE_PASSWORD'),
               database: config.get('DATABASE_NAME'),
               autoLoadEntities: true,
-              synchronize: false, // В продакшене ставь false и используй миграции!
+              synchronize: false,
           }),
           inject: [ConfigService],
       }),
