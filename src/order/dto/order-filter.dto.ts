@@ -1,18 +1,18 @@
 import {IsArray, IsDateString, IsEnum, IsNumber, IsOptional} from 'class-validator';
 import {Type} from 'class-transformer';
 import {FulfillmentType, OrderStatus, PaymentType} from '../entities/order.entity';
-import {PaginationDto} from '../../common/pagination/pagination.dto';
+import {PaginationDto} from '@common/pagination/pagination.dto';
 
 export class OrderFilterDto extends PaginationDto {
-  @IsOptional()
+  /*@IsOptional()
   @IsNumber()
   @Type(() => Number)
-  customerId?: number;
+  customerId?: number;*/
 
-  @IsOptional()
+  /*@IsOptional()
   @IsNumber()
   @Type(() => Number)
-  storeId?: number;
+  storeId?: number;*/
 
   @IsOptional()
   @IsEnum(OrderStatus)

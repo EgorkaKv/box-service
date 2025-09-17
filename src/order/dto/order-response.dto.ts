@@ -1,5 +1,6 @@
 import {OrderStatus, FulfillmentType, PaymentType, CancellerType, Order} from '../entities/order.entity';
 import {PaymentMethod} from "@order/entities/payment.entity";
+import {OrderPaymentDto} from "@order/mappers";
 
 export class OrderResponseDto {
   id: number;
@@ -35,11 +36,5 @@ export class OrderResponseDto {
     storeImageUrl?: string;
   };
 
-  payment?: {
-    id: number;
-    paymentMethod: PaymentMethod;
-    amount: number;
-    currency: string;
-    transactionId?: string; // Идентификатор транзакции, если применимо
-  };
+  payment?: OrderPaymentDto | undefined;
 }

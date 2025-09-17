@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository, SelectQueryBuilder } from 'typeorm';
+import {EntityManager, FindOptionsWhere, Repository, SelectQueryBuilder} from 'typeorm';
 import { Order, OrderStatus } from '../entities/order.entity';
 import { OrderFilterDto } from '../dto/order-filter.dto';
 import { CreateOrderDto } from "@order/dto/create-order.dto";
 import { PaginationService } from '@common/pagination/pagination.service';
 import {BaseOperationResult, OperationResult} from "@common/interfaces/operation-result.interface";
-import { BoxStatus } from "@surprise-box/entities/surprise-box.entity";
+import {BoxStatus, SurpriseBox} from "@surprise-box/entities/surprise-box.entity";
 import { AppLogger } from '@common/logger/app-logger.service';
 import {operationResultHelper} from "@common/interfaces/operation-result.helper";
 
@@ -14,12 +14,40 @@ import {operationResultHelper} from "@common/interfaces/operation-result.helper"
 export class OrderRepository {
   constructor(
     @InjectRepository(Order)
-    private readonly orderRepository: Repository<Order>,
-    private readonly paginationService: PaginationService,
+    private readonly repository: Repository<Order>,
     private readonly logger: AppLogger,
   ) {}
 
-  // Вызов функции подтверждения заказа
+  /**
+   * Создать QueryBuilder для сложных запросов
+   */
+  createQueryBuilder(alias: string = 'order') {
+    return this.repository.createQueryBuilder(alias);
+  }
+
+  /**
+   * Выполнить запрос с подсчетом
+   */
+  async executeQueryWithCount(queryBuilder: SelectQueryBuilder<Order>): Promise<[Order[], number]> {
+    return queryBuilder.getManyAndCount();
+  }
+
+  /**
+   * Найти заказы по простым условиям
+   * @param conditions
+   * @param relations
+   */
+  async findOneBy(conditions: FindOptionsWhere<Order>, relations: string[] = []): Promise<Order | null> {
+    return this.repository.findOne({
+      where: conditions,
+      relations,
+    });
+  }
+
+  /**
+   * Создание заказа через хранимую процедуру confirm_box_order
+   * @param createOrderDto
+   */
   async create(createOrderDto: CreateOrderDto):
     Promise<OperationResult<{ orderId: number | null; pickupCode: string | null; }>> {
 
@@ -31,7 +59,7 @@ export class OrderRepository {
       amount: createOrderDto.amount
     });
 
-    const result = await this.orderRepository.query(
+    const result = await this.repository.query(
       `SELECT * FROM confirm_box_order(
         $1, $2, $3, $4::PAYMENT_TYPE, $5::FULFILLMENT_TYPE, $6::PAYMENT_METHOD, $7, $8, $9, $10, $11, $12, $13
       )`,
@@ -66,27 +94,48 @@ export class OrderRepository {
     return queryResult;
   }
 
-  async findById(id: number): Promise<Order | null> {
-    this.logger.debug('Finding order by ID', 'OrderRepository', { orderId: id });
-
-    const order = await this.orderRepository.findOne({
-      where: { id },
-      relations: ['customer', 'surpriseBox', 'store', 'delivery', 'payment'],
-    });
-
-    this.logger.debug('Order search completed', 'OrderRepository', {
-      orderId: id,
-      found: !!order,
-      status: order?.status
-    });
-
-    return order;
+  async completeTransaction<T>(work: (manager: EntityManager) => Promise<T>): Promise<T> {
+    return this.repository.manager.transaction(work);
   }
 
-  async findByPickupCode(pickupCode: string): Promise<Order | null> {
+  async findOrderWithBox(manager: EntityManager, id: number): Promise<Order | null> {
+    return manager.findOne(Order, { where: { id }, relations: ['surpriseBox'] });
+  }
+
+  async saveOrder(manager: EntityManager, order: Order): Promise<Order> {
+    return manager.save(order);
+  }
+
+  async saveBox(manager: EntityManager, box: SurpriseBox): Promise<SurpriseBox> {
+    return manager.save(box);
+  }
+
+
+  /*  /!**
+     * Найти заказ по ID с опциональными связями
+     * @param id
+     *!/
+    async findById(id: number): Promise<Order | null> {
+      this.logger.debug('Finding order by ID', 'OrderRepository', { orderId: id });
+
+      const order = await this.repository.findOne({
+        where: { id },
+        relations: ['customer', 'surpriseBox', 'store', 'delivery', 'payment'],
+      });
+
+      this.logger.debug('Order search completed', 'OrderRepository', {
+        orderId: id,
+        found: !!order,
+        status: order?.status
+      });
+
+      return order;
+    }*/
+
+/*  async findByPickupCode(pickupCode: string): Promise<Order | null> {
     this.logger.debug('Finding order by pickup code', 'OrderRepository', { pickupCode });
 
-    const order = await this.orderRepository.findOne({
+    const order = await this.repository.findOne({
       where: { pickupCode },
       relations: ['customer', 'surpriseBox', 'store', 'delivery', 'payment'],
     });
@@ -98,9 +147,9 @@ export class OrderRepository {
     });
 
     return order;
-  }
+  }*/
 
-  async findWithFilters(filters: OrderFilterDto):
+  /*async findWithFilters(filters: OrderFilterDto):
     Promise<{ orders: Order[]; total: number; pagination: any }> {
     this.logger.debug('Finding orders with filters in database', 'OrderRepository', {
       customerId: filters.customerId, storeId: filters.storeId,
@@ -140,12 +189,12 @@ export class OrderRepository {
     });
 
     return { orders, total, pagination };
-  }
+  }*/
 
-  async completeOrder(id: number): Promise<BaseOperationResult> {
+  /*async completeOrder(id: number): Promise<BaseOperationResult> {
     this.logger.debug('Completing order transaction', 'OrderRepository', { orderId: id });
 
-    return await this.orderRepository.manager.transaction(async (manager: EntityManager) => {
+    return await this.repository.manager.transaction(async (manager: EntityManager) => {
       const order = await manager.findOne(Order, {
         where: { id },
         relations: ['surpriseBox'],
@@ -180,9 +229,9 @@ export class OrderRepository {
 
       return { success: true, message: 'Order and SurpriseBox statuses updated' };
     });
-  }
+  }*/
 
-  private createFilteredQuery(filters: OrderFilterDto): SelectQueryBuilder<Order> {
+  /*private createFilteredQuery(filters: OrderFilterDto): SelectQueryBuilder<Order> {
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.customer', 'customer')
@@ -198,9 +247,9 @@ export class OrderRepository {
     this.applySorting(queryBuilder, filters);
 
     return queryBuilder;
-  }
+  }*/
 
-  private applyFilters(queryBuilder: SelectQueryBuilder<Order>, filters: OrderFilterDto): void {
+  /*private applyFilters(queryBuilder: SelectQueryBuilder<Order>, filters: OrderFilterDto): void {
     if (filters.customerId) {
       queryBuilder.andWhere('order.customerId = :customerId', { customerId: filters.customerId });
     }
@@ -251,5 +300,5 @@ export class OrderRepository {
 
     const sortField = sortFieldMap[sortBy] || 'order.orderDate';
     queryBuilder.orderBy(sortField, sortOrder);
-  }
+  }*/
 }
