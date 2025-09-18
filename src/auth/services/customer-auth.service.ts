@@ -3,10 +3,12 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { FirebaseConfig } from '@common/config/firebase.config';
 import { CustomerRepository } from '@customer/repositories/customer.repository';
-import { CustomerAuthResponseDto, DecodedTokenResponseDto } from '../dto/customer-auth.dto';
+import { CustomerAuthResponseDto } from '../dto/customer-auth.dto';
 import { AppLogger } from '@common/logger/app-logger.service';
 import { CustomerJwtPayload } from '../entities/jwt-payload.interface';
 import {Customer} from "@customer/entities/customer.entity";
+import {EmployeeLoginDto} from "@auth/dto/employee-login.dto";
+import {CustomerRegisterDto} from "@auth/dto/customer-register.dto";
 
 @Injectable()
 export class CustomerAuthService {
@@ -121,7 +123,99 @@ export class CustomerAuthService {
     };
   }
 
-  async authTest(customerId?: string): Promise<{ token: string }> {
+  // авторизация по email и паролю
+  async loginCustomer(loginDto: EmployeeLoginDto): Promise<CustomerAuthResponseDto> {
+    this.logger.log('Processing customer login', 'CustomerAuthService', { login: loginDto.login });
+
+    // Ищем клиента по email или телефону
+    let customer: Customer | null = null;
+    if (loginDto.login.includes('@')) {
+      customer = await this.customerRepository.findByEmail(loginDto.login);
+    } else {
+      customer = await this.customerRepository.findByPhone(loginDto.login);
+    }
+
+    if (!customer) {
+      this.logger.debug('Customer login failed - customer not found', 'CustomerAuthService', { login: loginDto.login });
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Проверяем пароль
+    const isPasswordValid = await this.customerRepository.validatePassword(customer.id, loginDto.password);
+    if (!isPasswordValid) {
+      this.logger.debug('Customer login failed - invalid password', 'CustomerAuthService', { customerId: customer.id });
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Создаем типизированный payload для customer
+    const payload: CustomerJwtPayload = {
+      sub: customer.id,
+      type: 'customer',
+      phone: customer.phone,
+      email: customer.email,
+    };
+
+    // Генерируем JWT токены
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d'),
+    });
+
+    this.logger.log('Customer login successful', 'CustomerAuthService', { customerId: customer.id });
+
+    return {
+      accessToken,
+      refreshToken,
+      customer: {
+        id: customer.id,
+        phone: customer.phone,
+        email: customer.email,
+      }
+    };
+  }
+
+  async registerCustomer(registerDto: CustomerRegisterDto): Promise<CustomerAuthResponseDto> {
+    // регистрация клиента с email и паролем (без телефона)
+    this.logger.log('Processing customer registration', 'CustomerAuthService', { email: registerDto.email });
+
+    // Проверяем, что клиент с таким email не существует
+    let existingCustomer = await this.customerRepository.findByEmail(registerDto.email);
+    if (existingCustomer) {
+      this.logger.debug('Customer registration failed - email already in use', 'CustomerAuthService', { email: registerDto.email });
+      throw new BadRequestException('Email already in use');
+    }
+
+    // Создаем нового клиента
+    const customer = await this.customerRepository.createWithEmailAndPassword(registerDto.email, registerDto.password);
+
+    // Создаем типизированный payload для customer
+    const payload: CustomerJwtPayload = {
+      sub: customer.id,
+      type: 'customer',
+      phone: customer.phone,
+      email: customer.email,
+    };
+
+    // Генерируем JWT токены
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d'),
+    });
+
+    this.logger.log('Customer registration successful', 'CustomerAuthService', { customerId: customer.id });
+
+    return {
+      accessToken,
+      refreshToken,
+      customer: {
+        id: customer.id,
+        phone: customer.phone,
+        email: customer.email,
+      }
+    };
+
+  }
+  /*async authTest(customerId?: string): Promise<{ token: string }> {
     this.logger.log('Processing test authentication', 'CustomerAuthService', { customerId });
 
     const payload: CustomerJwtPayload = {
@@ -156,5 +250,5 @@ export class CustomerAuthService {
 
       throw new UnauthorizedException(`Failed to decode token: ${error.message}`);
     }
-  }
+  }*/
 }

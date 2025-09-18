@@ -24,6 +24,9 @@ export class Customer {
   @Column({ type: 'text', unique: true, nullable: true })
   phone: string;
 
+  @Column({ name: 'password_hash', type: 'text', nullable: true })
+  passwordHash: string;
+
   @Column({
     type: 'enum',
     enum: CustomerGender,

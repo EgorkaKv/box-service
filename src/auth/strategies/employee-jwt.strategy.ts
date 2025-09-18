@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { AuthService } from '../services/auth.service';
+import { StoreAuthService } from '../services/store-auth.service';
 import { AppLogger } from '@common/logger/app-logger.service';
 import { EmployeeJwtPayload } from '../entities/jwt-payload.interface';
 
@@ -10,7 +10,7 @@ import { EmployeeJwtPayload } from '../entities/jwt-payload.interface';
 export class EmployeeJwtStrategy extends PassportStrategy(Strategy, 'employee-jwt') {
   constructor(
     private readonly configService: ConfigService,
-    private readonly authService: AuthService,
+    private readonly authService: StoreAuthService,
     private readonly logger: AppLogger,
   ) {
     super({

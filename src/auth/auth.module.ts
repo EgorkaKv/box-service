@@ -4,9 +4,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StoreAuthController } from './controllers/store.auth.controller';
-import { AuthService } from './services/auth.service';
+import { CustomerAuthController } from './controllers/customer.auth.controller';
+import { StoreAuthService } from './services/store-auth.service';
 import { CustomerAuthService } from './services/customer-auth.service';
-import { AuthRepository } from './repositories/auth.repository';
+import { StoreCredentialRepository } from './repositories/store-credential.repository';
 import { EmployeeJwtStrategy } from './strategies/employee-jwt.strategy';
 import { CustomerJwtStrategy } from './strategies/customer-jwt.strategy';
 import { AdminJwtStrategy } from './strategies/admin-jwt.strategy';
@@ -29,17 +30,20 @@ import { CustomerModule } from '@customer/customer.module';
     }),
     CustomerModule, // Добавляем CustomerModule для доступа к CustomerRepository
   ],
-  controllers: [StoreAuthController],
+  controllers: [
+    StoreAuthController,
+    CustomerAuthController,
+  ],
   providers: [
-    AuthService,
+    StoreAuthService,
     CustomerAuthService,
-    AuthRepository,
+    StoreCredentialRepository,
     EmployeeJwtStrategy,
     CustomerJwtStrategy,
     AdminJwtStrategy
   ],
   exports: [
-    AuthService,
+    StoreAuthService,
     CustomerAuthService,
     EmployeeJwtStrategy,
     CustomerJwtStrategy,

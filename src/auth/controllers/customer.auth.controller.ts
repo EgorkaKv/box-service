@@ -1,11 +1,12 @@
 import {Body, Controller, HttpCode, HttpStatus, Param, Post, UsePipes, ValidationPipe} from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
+import {ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam} from '@nestjs/swagger';
 import {CustomerAuthService} from "@auth/services/customer-auth.service";
 import {AppLogger} from "@common/logger/app-logger.service";
-import {CustomerRefreshTokenDto, DecodeJwtDto, VerifyFirebaseTokenDto} from "@auth/dto/customer-auth.dto";
+import {CustomerAuthResponseDto, CustomerLoginDto} from "@auth/dto/customer-auth.dto";
+import {CustomerRegisterDto} from "@auth/dto/customer-register.dto";
 
 @ApiTags('Customer Authentication')
-@Controller('auth')
+@Controller('auth/customer')
 @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
 export class CustomerAuthController {
   constructor(
@@ -42,7 +43,7 @@ export class CustomerAuthController {
   })
   @ApiResponse({ status: 401, description: 'Invalid Firebase token' })
   @ApiResponse({ status: 400, description: 'Bad request - validation failed' })
-  @Post('customer/verify-token')
+  @Post('/firebase')
   @HttpCode(HttpStatus.OK)
   async verifyFirebaseToken(@Body('idToken', new ValidationPipe()) idToken: string):
     Promise<{accessToken: string; refreshToken: string}> {
@@ -51,6 +52,50 @@ export class CustomerAuthController {
     const result = await this.customerAuthService.verifyFirebaseToken(idToken);
 
     this.logger.log('Customer Firebase token verification completed', 'AuthController');
+    return result;
+  }
+
+  /**
+   * Авторизация клиента по логину и паролю
+   */
+  @ApiOperation({
+    summary: 'Customer login with password',
+    description: 'Authenticate customer using login (email or phone) and password'
+  })
+  @ApiBody({
+    type: CustomerLoginDto,
+    description: 'Customer login credentials'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Customer authenticated successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        accessToken: { type: 'string', description: 'JWT access token' },
+        refreshToken: { type: 'string', description: 'JWT refresh token' },
+        customer: {
+          type: 'object',
+          properties: {
+            id: { type: 'number', description: 'Customer ID' },
+            phone: { type: 'string', description: 'Customer phone number' },
+            email: { type: 'string', description: 'Customer email' }
+          }
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiResponse({ status: 400, description: 'Bad request - validation failed' })
+  @Post('/login')
+  @HttpCode(HttpStatus.OK)
+  async loginWithPassword(@Body() loginDto: CustomerLoginDto):
+    Promise<{accessToken: string; refreshToken: string; customer?: any}> {
+    this.logger.log('Received customer login request', 'AuthController');
+
+    const result = await this.customerAuthService.loginCustomer(loginDto);
+
+    this.logger.log('Customer login completed', 'AuthController');
     return result;
   }
 
@@ -65,10 +110,19 @@ export class CustomerAuthController {
     schema: {
       type: 'object',
       properties: {
-        refreshToken: { type: 'string', description: 'Valid customer refresh token' }
+        grant_type: { 
+          type: 'string', 
+          description: 'Must be "refresh_token"',
+          example: 'refresh_token'
+        },
+        refresh_token: { 
+          type: 'string', 
+          description: 'Valid customer refresh token' 
+        }
       },
-      required: ['refreshToken']
-    }
+      required: ['grant_type', 'refresh_token']
+    },
+    description: 'Form data (application/x-www-form-urlencoded)'
   })
   @ApiResponse({
     status: 200,
@@ -83,7 +137,7 @@ export class CustomerAuthController {
   })
   @ApiResponse({ status: 401, description: 'Invalid refresh token' })
   @ApiResponse({ status: 400, description: 'Bad request - validation failed' })
-  @Post('customer/refresh')
+  @Post('/refresh')
   @HttpCode(HttpStatus.OK)
   async refreshCustomerToken(@Body('refreshToken', new ValidationPipe()) refreshToken: string):
     Promise<{accessToken: string; refreshToken: string}> {
@@ -96,8 +150,51 @@ export class CustomerAuthController {
   }
 
   /**
-   * Тестовая авторизация клиента (для разработки)
+   * Регистрация нового клиента
+   * @param customerRegisterDto
    */
+  @ApiOperation({
+    summary: 'Register new customer',
+    description: 'Create a new customer account with phone, email, and password'
+  })
+  @ApiBody({
+    type: CustomerRegisterDto,
+    description: 'Customer registration data'
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Customer registered successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        accessToken: { type: 'string', description: 'JWT access token' },
+        refreshToken: { type: 'string', description: 'JWT refresh token' },
+        customer: {
+          type: 'object',
+          properties: {
+            id: { type: 'number', description: 'Customer ID' },
+            phone: { type: 'string', description: 'Customer phone number' },
+            email: { type: 'string', description: 'Customer email' }
+          }
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 400, description: 'Bad request - validation failed or email/phone already in use' })
+  @Post('/register')
+  @HttpCode(HttpStatus.CREATED)
+  async registerCustomer(@Body() customerRegisterDto: CustomerRegisterDto): Promise<CustomerAuthResponseDto> {
+    this.logger.log('Received customer registration request', 'AuthController');
+
+    const result = await this.customerAuthService.registerCustomer(customerRegisterDto);
+
+    this.logger.log('Customer registration completed', 'AuthController');
+    return result;
+  }
+
+/*  /!**
+   * Тестовая авторизация клиента (для разработки)
+   *!/
   @ApiOperation({
     summary: 'Test customer authentication',
     description: 'Development endpoint for testing customer authentication without Firebase'
@@ -126,7 +223,7 @@ export class CustomerAuthController {
     }
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  @Post('customer/test/:customerId?')
+  @Post('/test/:customerId')
   @HttpCode(HttpStatus.OK)
   async authTest(@Body() body: any, @Param('customerId') customerId?: string): Promise<{ token: string }> {
     this.logger.log('Received customer test auth request', 'AuthController');
@@ -135,11 +232,11 @@ export class CustomerAuthController {
 
     this.logger.log('Customer test auth completed', 'AuthController');
     return result;
-  }
+  }*/
 
-  /**
+/*  /!**
    * Декодирование JWT токена
-   */
+   *!/
   @ApiOperation({
     summary: 'Decode JWT token',
     description: 'Decode and return the payload of a JWT token for debugging purposes'
@@ -167,5 +264,5 @@ export class CustomerAuthController {
 
     this.logger.log('JWT decode request completed', 'AuthController');
     return result;
-  }
+  }*/
 }

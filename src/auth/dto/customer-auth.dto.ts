@@ -1,21 +1,13 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class VerifyFirebaseTokenDto {
+export class CustomerLoginDto {
   @IsNotEmpty()
   @IsString()
-  idToken: string;
-}
+  login: string; // может быть email или phone
 
-export class CustomerRefreshTokenDto {
   @IsNotEmpty()
   @IsString()
-  refreshToken: string;
-}
-
-export class DecodeJwtDto {
-  @IsNotEmpty()
-  @IsString()
-  token: string;
+  password: string;
 }
 
 export class CustomerAuthResponseDto {
@@ -28,6 +20,3 @@ export class CustomerAuthResponseDto {
   }
 }
 
-export class DecodedTokenResponseDto {
-  decoded: string;
-}

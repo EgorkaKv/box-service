@@ -1,18 +1,18 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Put, UseGuards, UsePipes, ValidationPipe, BadRequestException, UnauthorizedException, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
-import { AuthService } from '../services/auth.service';
-import { LoginDto } from '../dto/login.dto';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiHeader } from '@nestjs/swagger';
+import { StoreAuthService } from '../services/store-auth.service';
+import { EmployeeLoginDto } from '../dto/employee-login.dto';
 import { RegisterEmployeeDto } from '../dto/register-employee.dto';
 import { ChangeLoginDto, ChangePasswordDto } from '../dto/change-credentials.dto';
 import { AdminPasswordGuard } from '../guards/admin-password.guard';
 import { AppLogger } from '@common/logger/app-logger.service';
 
 @ApiTags('Store Authentication')
-@Controller('auth')
+@Controller('auth/employee')
 @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
 export class StoreAuthController {
   constructor(
-    private readonly authService: AuthService,
+    private readonly authService: StoreAuthService,
     private readonly logger: AppLogger
   ) {}
 
@@ -21,7 +21,7 @@ export class StoreAuthController {
     description: 'Authenticate store employee with credentials and return access tokens'
   })
   @ApiBody({
-    type: LoginDto,
+    type: EmployeeLoginDto,
     description: 'Employee login credentials'
   })
   @ApiResponse({
@@ -38,13 +38,13 @@ export class StoreAuthController {
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @ApiResponse({ status: 400, description: 'Bad request - validation failed' })
-  @Post('login')
+  @Post('/login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() loginDto: LoginDto):
+  async login(@Body() loginDto: EmployeeLoginDto):
     Promise<{accessToken: string; refreshToken: string; tokenType: string}> {
     this.logger.log('Received employee login request', 'AuthController');
 
-    const result = await this.authService.login(loginDto);
+    const result = await this.authService.loginEmployee(loginDto);
 
     this.logger.log('Employee login request completed', 'AuthController');
     return result;
@@ -76,7 +76,7 @@ export class StoreAuthController {
   })
   @ApiResponse({ status: 401, description: 'Invalid refresh token' })
   @ApiResponse({ status: 400, description: 'Bad request - validation failed' })
-  @Post('refresh')
+  @Post('/refresh')
   @HttpCode(HttpStatus.OK)
   async refreshToken(@Body('refreshToken', new ValidationPipe()) refreshToken: string):
     Promise<{accessToken: string; refreshToken: string;}> {
@@ -133,7 +133,7 @@ export class StoreAuthController {
   @ApiResponse({ status: 400, description: 'Bad request - validation failed' })
   @ApiResponse({ status: 403, description: 'Forbidden - invalid admin password' })
   @ApiResponse({ status: 404, description: 'Employee not found' })
-  @Put('change-login')
+  @Put('/login')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminPasswordGuard)
   async changeLogin(@Body() changeLoginDto: ChangeLoginDto): Promise<void> {
@@ -161,7 +161,7 @@ export class StoreAuthController {
   @ApiResponse({ status: 400, description: 'Bad request - validation failed' })
   @ApiResponse({ status: 403, description: 'Forbidden - invalid admin password' })
   @ApiResponse({ status: 404, description: 'Employee not found' })
-  @Put('change-password')
+  @Put('/password')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminPasswordGuard)
   async changePassword(@Body() changePasswordDto: ChangePasswordDto): Promise<void> {

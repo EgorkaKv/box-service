@@ -1,6 +1,6 @@
-import { IsString, IsNotEmpty, MinLength } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 
-export class LoginDto {
+export class EmployeeLoginDto {
   @IsString()
   @IsNotEmpty({ message: 'Логин обязателен' })
   login: string;

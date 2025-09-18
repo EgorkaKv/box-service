@@ -2,8 +2,8 @@ import {ConflictException, HttpException, Injectable, NotFoundException, Unautho
 import {JwtService} from '@nestjs/jwt';
 import {ConfigService} from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import {AuthRepository} from '../repositories/auth.repository';
-import {LoginDto} from '../dto/login.dto';
+import {StoreCredentialRepository} from '../repositories/store-credential.repository';
+import {EmployeeLoginDto} from '../dto/employee-login.dto';
 import {RegisterEmployeeDto} from '../dto/register-employee.dto';
 import {EmployeeRole, StoreCredential} from '../entities/store-credential.entity';
 import {ChangeLoginDto, ChangePasswordDto} from '../dto/change-credentials.dto';
@@ -12,25 +12,25 @@ import {EmployeeJwtPayload} from '../entities/jwt-payload.interface';
 import {Store} from "@store/entities/store.entity";
 
 @Injectable()
-export class AuthService {
+export class StoreAuthService {
   private readonly MAX_LOGIN_ATTEMPTS = 5;
   private readonly LOCKOUT_TIME = 30 * 60 * 1000; // 30 минут
   private readonly SALT_ROUNDS = 10;
 
   constructor(
-    private readonly authRepository: AuthRepository,
+    private readonly storeCredentialRepository: StoreCredentialRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly logger: AppLogger,
   ) {}
 
-  async login(loginDto: LoginDto):
+  async loginEmployee(loginDto: EmployeeLoginDto):
     Promise<{accessToken: string; refreshToken: string; tokenType: string}> {
 
     this.logger.log('Processing employee login request', 'AuthService', {login: loginDto.login});
 
     // Найти учетные данные
-    const storeCredential = await this.authRepository.findByLogin(loginDto.login);
+    const storeCredential = await this.storeCredentialRepository.findByLogin(loginDto.login);
     if (!storeCredential) {
       this.logger.debug('Login failed - credentials not found', 'AuthService', { login: loginDto.login });
       throw new UnauthorizedException('invalid login or password');
@@ -47,14 +47,14 @@ export class AuthService {
       // Проверить пароль
       const isPasswordValid = await bcrypt.compare(loginDto.password, storeCredential.passwordHash);
       if (!isPasswordValid) {
-        await this.authRepository.incrementLoginAttempts(storeCredential.id);
+        await this.storeCredentialRepository.incrementLoginAttempts(storeCredential.id);
         this.logger.debug('Login failed - invalid password', 'AuthService', {
           login: loginDto.login, attempts: storeCredential.loginAttempts + 1});
         throw new UnauthorizedException('invalid login or password');
       }
 
       // Сбросить счетчик попыток входа
-      await this.authRepository.setSuccessLogin(storeCredential.id);
+      await this.storeCredentialRepository.setSuccessLogin(storeCredential.id);
 
       // Создать токены
       const { accessToken, refreshToken } = this.generateTokens(storeCredential);
@@ -80,7 +80,7 @@ export class AuthService {
     }
 
     // Проверить существование учетных данных
-    const storeCredential = await this.authRepository.findById(payload.sub);
+    const storeCredential = await this.storeCredentialRepository.findById(payload.sub);
     if (!storeCredential) {
       this.logger.debug('Token refresh failed - credentials not found', 'AuthService', {credentialId: payload.sub});
       throw new UnauthorizedException('invalid refresh token');
@@ -104,7 +104,7 @@ export class AuthService {
       login: registerDto.login, storeId: registerDto.storeId, role: registerDto.role });
 
     // check that login is not already exists
-    const loginIsRegistered = await this.authRepository.findByLogin(registerDto.login);
+    const loginIsRegistered = await this.storeCredentialRepository.findByLogin(registerDto.login);
     if (loginIsRegistered) {
       this.logger.debug('Employee registration failed - login already exists', 'AuthService',
         {login: registerDto})
@@ -112,7 +112,7 @@ export class AuthService {
     }
 
     // check that store exists
-    const storeExists = await this.authRepository.findByStoreId(registerDto.storeId);
+    const storeExists = await this.storeCredentialRepository.findByStoreId(registerDto.storeId);
     if (!storeExists) {
       this.logger.debug('Employee registration failed - store not found', 'AuthService',
         {storeId: registerDto.storeId});
@@ -120,7 +120,7 @@ export class AuthService {
     }
 
     // check that role is not already occupied
-    const roleIsOccupied = await this.authRepository.findByStoreAndRole(
+    const roleIsOccupied = await this.storeCredentialRepository.findByStoreAndRole(
       registerDto.storeId, registerDto.role );
     if (roleIsOccupied) {
       this.logger.debug('Employee registration failed - role already occupied', 'AuthService',
@@ -133,7 +133,7 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(registerDto.password, this.SALT_ROUNDS);
 
     // Создать учетные данные
-    const newCredentials = await this.authRepository.create({
+    const newCredentials = await this.storeCredentialRepository.create({
       store: {id: registerDto.storeId} as Store,
       login: registerDto.login,
       passwordHash,
@@ -154,7 +154,7 @@ export class AuthService {
     });
 
     // Проверить существование учетных данных
-    const existingCredential = await this.authRepository.findByStoreAndRole(
+    const existingCredential = await this.storeCredentialRepository.findByStoreAndRole(
       changeLoginDto.storeId,
       changeLoginDto.role
     );
@@ -166,14 +166,14 @@ export class AuthService {
     }
 
     // Проверить уникальность нового логина
-    const loginExists = await this.authRepository.findByLogin(changeLoginDto.newLogin);
+    const loginExists = await this.storeCredentialRepository.findByLogin(changeLoginDto.newLogin);
     if (loginExists) {
       this.logger.debug('Login change failed - login already exists', 'AuthService', {newLogin: changeLoginDto.newLogin});
       throw new ConflictException('Login already exists');
     }
 
     // Обновить логин
-    const updateResult = await this.authRepository.updateLogin(
+    const updateResult = await this.storeCredentialRepository.updateLogin(
       changeLoginDto.storeId,
       changeLoginDto.role,
       changeLoginDto.newLogin
@@ -196,7 +196,7 @@ export class AuthService {
       storeId: changePasswordDto.storeId, role: changePasswordDto.role});
 
     // Проверить существование учетных данных
-    const existingCredential = await this.authRepository.findByStoreAndRole(
+    const existingCredential = await this.storeCredentialRepository.findByStoreAndRole(
       changePasswordDto.storeId,
       changePasswordDto.role || EmployeeRole.STAFF
     );
@@ -212,7 +212,7 @@ export class AuthService {
     const newPasswordHash = await bcrypt.hash(changePasswordDto.newPassword, this.SALT_ROUNDS);
 
     // Обновить пароль
-    const updateResult = await this.authRepository.updatePassword(
+    const updateResult = await this.storeCredentialRepository.updatePassword(
       changePasswordDto.storeId,
       changePasswordDto.role || EmployeeRole.STAFF,
       newPasswordHash

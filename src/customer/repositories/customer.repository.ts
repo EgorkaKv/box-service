@@ -112,6 +112,23 @@ export class CustomerRepository {
     return savedCustomer;
   }
 
+  async validatePassword(id: number, passwordHash: string): Promise<boolean> {
+    this.logger.debug('Validating customer password', 'CustomerRepository', { id });
+
+    const customer = await this.customerRepository.findOne({
+      where: { id, passwordHash },
+    });
+
+    const isValid = !!customer;
+
+    this.logger.debug('Customer password validation completed', 'CustomerRepository', {
+      id,
+      isValid
+    });
+
+    return isValid;
+  }
+
   /**
    * Обновить время последнего входа
    */
@@ -123,5 +140,30 @@ export class CustomerRepository {
     });
 
     this.logger.debug('Last login updated for customer', 'CustomerRepository', { id });
+  }
+
+  /**
+   * Создать клиента с email и паролем
+   * @param email
+   * @param passwordHash
+   */
+  async createWithEmailAndPassword(email: string, passwordHash: string): Promise<Customer> {
+    this.logger.debug('Creating customer with email and password', 'CustomerRepository', { email });
+
+    const customer = this.customerRepository.create({
+      email,
+      passwordHash,
+      customerName: `Customer ${email}`, // Временное имя, можно будет изменить позже
+      lastLogin: new Date(),
+    });
+
+    const savedCustomer = await this.customerRepository.save(customer);
+
+    this.logger.debug('Customer created with email and password', 'CustomerRepository', {
+      email,
+      customerId: savedCustomer.id
+    });
+
+    return savedCustomer;
   }
 }

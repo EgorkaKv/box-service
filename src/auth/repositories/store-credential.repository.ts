@@ -5,10 +5,10 @@ import { StoreCredential, EmployeeRole } from '../entities/store-credential.enti
 import { AppLogger } from '@common/logger/app-logger.service';
 
 @Injectable()
-export class AuthRepository {
+export class StoreCredentialRepository {
   constructor(
     @InjectRepository(StoreCredential)
-    private readonly storeCredentialRepository: Repository<StoreCredential>,
+     private readonly storeCredentialRepository: Repository<StoreCredential>,
     private readonly logger: AppLogger,
   ) {}
 

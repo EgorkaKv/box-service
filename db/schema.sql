@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS customer (
 	email TEXT UNIQUE,
 	customer_name TEXT NOT NULL,
 	phone TEXT UNIQUE,
+    password_hash TEXT,
 	-- gender ('male', 'female', 'other')
 	gender CUSTOMER_GENDER,
 	profile_image_url TEXT,
