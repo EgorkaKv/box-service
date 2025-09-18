@@ -70,7 +70,7 @@ VALUES (1, 1, 1, 'Смачна випічка від КАФЕ РИНОК',
 (2, 1, 2, 'Солодощі від КАФЕ РИНОК', 
  'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
  25000, 15000, 'https://img.com/box2.png', '2025-06-19 18:30:00', '2025-06-19 20:00:00', '2025-06-19 08:00:00', '2025-06-19 20:00:00'),
-(3, 1, 3, 'Солона випічка від КАФЕ РИНОК', 
+(3, 1, 3, 'Солона випічка від КАФЕ РИНОК',
  'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
  30000, 18000, NULL, '2025-06-19 19:00:00', '2025-06-19 20:00:00', '2025-06-19 08:00:00', '2025-06-19 20:30:00'),
 (4, 1, 4, 'Набір сніданків від КАФЕ РИНОК', 
@@ -203,6 +203,54 @@ ON CONFLICT (id) DO NOTHING;
 
 
 
+-- 👥 Створення тестових користувачів (customers)
+-- Очистка таблиці customers
+DELETE FROM customer;
+
+-- Користувачі з різними методами авторизації
+INSERT INTO customer (id, firebase_uid, email, customer_name, phone, password_hash, gender, profile_image_url, registration_date, last_login, push_notifications_enabled, email_notifications_enabled)
+VALUES
+-- Користувачі з email та паролем
+(1, NULL, 'john.doe@gmail.com', 'Іван Петренко', '+380501234567', crypt('password123', gen_salt('bf')), 'male', 'https://img.com/avatars/john.jpg', '2024-01-15 10:30:00', '2024-09-18 14:22:00', true, true),
+
+(2, NULL, 'maria.shevchenko@ukr.net', 'Марія Шевченко', '+380672345678', crypt('mySecret456', gen_salt('bf')), 'female', 'https://img.com/avatars/maria.jpg', '2024-02-20 09:15:00', '2024-09-17 18:45:00', true, false),
+
+(3, NULL, 'oleksandr.kovalenko@gmail.com', 'Олександр Коваленко', '+380633456789', crypt('strongPass789', gen_salt('bf')), 'male', NULL, '2024-03-10 16:20:00', '2024-09-16 12:30:00', false, true),
+
+-- Користувачі тільки з телефоном (Firebase SMS)
+(4, 'firebase_uid_123456', NULL, 'Анна Мельник', '+380504567890', NULL, 'female', 'https://img.com/avatars/anna.jpg', '2024-04-05 11:45:00', '2024-09-18 20:15:00', true, true),
+
+(5, 'firebase_uid_789012', NULL, 'Володимир Сидоренко', '+380675678901', NULL, 'male', NULL, '2024-05-12 14:30:00', '2024-09-15 16:20:00', true, true),
+
+-- Користувачі з email через Firebase
+(6, 'firebase_uid_345678', 'natalia.bondar@gmail.com', 'Наталія Бондар', NULL, NULL, 'female', 'https://img.com/avatars/natalia.jpg', '2024-06-08 13:10:00', '2024-09-17 10:30:00', false, false),
+
+(7, 'firebase_uid_901234', 'dmitro.lytvyn@yahoo.com', 'Дмитро Литвин', NULL, NULL, 'male', 'https://img.com/avatars/dmitro.jpg', '2024-07-03 17:25:00', '2024-09-18 08:45:00', true, true),
+
+-- Комбіновані користувачі (email + телефон + пароль)
+(8, NULL, 'oksana.petrenko@gmail.com', 'Оксана Петренко', '+380636789012', crypt('securePass321', gen_salt('bf')), 'female', 'https://img.com/avatars/oksana.jpg', '2024-08-15 12:00:00', '2024-09-18 19:30:00', true, true),
+
+(9, NULL, 'sergiy.marchenko@gmail.com', 'Сергій Марченко', '+380507890123', crypt('myPassword654', gen_salt('bf')), 'male', NULL, '2024-08-20 09:40:00', '2024-09-16 21:10:00', true, false),
+
+-- Користувачі без останнього входу (нові реєстрації)
+(10, NULL, 'yuliya.savchenko@gmail.com', 'Юлія Савченко', '+380678901234', crypt('newUser789', gen_salt('bf')), 'female', 'https://img.com/avatars/yuliya.jpg', '2024-09-18 16:30:00', NULL, true, true),
+
+(11, 'firebase_uid_567890', 'andrii.boyko@gmail.com', 'Андрій Бойко', '+380509012345', NULL, 'male', 'https://img.com/avatars/andrii.jpg', '2024-09-17 14:20:00', NULL, true, true),
+
+-- Користувачі з різними налаштуваннями сповіщень
+(12, NULL, 'tetyana.kravchenko@gmail.com', 'Тетяна Кравченко', '+380670123456', crypt('notification123', gen_salt('bf')), 'female', NULL, '2024-09-01 08:15:00', '2024-09-18 12:45:00', false, false),
+
+(13, 'firebase_uid_234570', NULL, 'Микола Гриценко', '+380631234570', NULL, 'male', 'https://img.com/avatars/mykola.jpg', '2024-08-25 19:30:00', '2024-09-17 15:20:00', false, true),
+
+-- Користувачі з гендером 'other'
+(14, NULL, 'alex.rainbow@gmail.com', 'Олекс Веселка', '+380502345678', crypt('rainbow456', gen_salt('bf')), 'other', 'https://img.com/avatars/alex.jpg', '2024-07-20 11:25:00', '2024-09-16 17:40:00', true, true),
+
+-- Користувачі для тестування різних сценаріїв
+(15, NULL, 'test.customer@example.com', 'Тестовий Користувач', '+380673456789', crypt('testPass123', gen_salt('bf')), 'male', NULL, '2024-09-10 10:00:00', '2024-09-18 09:30:00', true, true)
+
+ON CONFLICT (id) DO NOTHING;
+
+
 -- 🔁 Створення surprise box'ів із шаблонів
 -- ⚠️ Працює лише якщо всі шаблони з id від 1 до 45 існують
 
@@ -218,4 +266,3 @@ BEGIN
         i := i + 1;
     END LOOP;
 END $$;
-
