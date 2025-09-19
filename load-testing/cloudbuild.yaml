@@ -1,0 +1,28 @@
+steps:
+  # Шаг 1: сборка Docker образа
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'europe-central2-docker.pkg.dev/$PROJECT_ID/load-test-box-service-1/load-test-bs:$COMMIT_SHA'
+      - '-t'
+      - 'europe-central2-docker.pkg.dev/$PROJECT_ID/load-test-box-service-1/load-test-bs:latest'
+      - '.'
+    dir: 'load-testing'
+
+  # Шаг 2: пуш образа в Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'europe-central2-docker.pkg.dev/$PROJECT_ID/load-test-box-service-1/load-test-bs'
+
+# Только срабатывает при изменениях в папке load-testing
+includedFiles:
+  - 'load-testing/**'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+# Таймаут сборки
+timeout: '600s'
