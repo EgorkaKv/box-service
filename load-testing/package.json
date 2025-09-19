@@ -1,0 +1,13 @@
+{
+  "name": "box-service-load-testing",
+  "version": "1.0.0",
+  "description": "Load testing suite for Box Service API",
+  "scripts": {
+    "test": "./scripts/run-tests.sh",
+    "test:local": "./scripts/run-tests.sh http://localhost:3000",
+    "clean": "rm -rf results/*.json"
+  },
+  "devDependencies": {
+    "k6": "^0.47.0"
+  }
+}
