@@ -47,8 +47,8 @@ export class CommonFilters {
   static applyActiveBoxFilters(queryBuilder: SelectQueryBuilder<SurpriseBox>): void {
     queryBuilder
       .where('surprise_box.status = :status', { status: BoxStatus.ACTIVE })
-      .andWhere('surprise_box.sale_end_time > NOW()')
-      .andWhere('surprise_box.sale_start_time <= NOW()');
+      /*.andWhere('surprise_box.sale_end_time > NOW()')
+      .andWhere('surprise_box.sale_start_time <= NOW()');*/
   }
 
   /**
