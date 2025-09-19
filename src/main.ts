@@ -75,17 +75,20 @@ async function bootstrap() {
     app.useGlobalFilters(new GlobalExceptionFilter(appLogger));
     app.useGlobalInterceptors(new LoggingInterceptor(appLogger));
 
-    const port = process.env.PORT || 3000;
+    // Cloud Run автоматически устанавливает PORT=8080
+    const port = parseInt(process.env.PORT!, 10);
+    if (isNaN(port)) {throw new Error('❌ PORT environment variable is not set or is not a number');}
 
-    await app.listen(port);
+    await app.listen(port, '0.0.0.0');
 
     const logLevel = process.env.LOG_LEVEL || 'info';
     const environment = process.env.NODE_ENV || 'DEV';
 
-    appLogger.log(`🚀 Application is running on: http://localhost:${port}`, 'Bootstrap');
-    appLogger.log(`📚 Swagger documentation: http://localhost:${port}/api/docs`, 'Bootstrap');
+    appLogger.log(`🚀 Application is running on: http://0.0.0.0:${port}`, 'Bootstrap');
+    appLogger.log(`📚 Swagger documentation: http://0.0.0.0:${port}/api/docs`, 'Bootstrap');
     appLogger.log(`🌍 Environment: ${environment}`, 'Bootstrap');
     appLogger.log(`📊 Log Level: ${logLevel}`, 'Bootstrap');
+    appLogger.log(`🔧 Container ready to serve traffic on port ${port}`, 'Bootstrap');
   } catch (error) {
     console.error('❌ Application failed to start:', error.message);
     process.exit(1);
