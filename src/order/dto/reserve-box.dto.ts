@@ -1,4 +1,4 @@
-import {IsNotEmpty, IsNumber, IsOptional} from 'class-validator';
+import {IsNotEmpty, IsNumber, IsOptional, Max} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ReserveBoxDto {
@@ -6,7 +6,6 @@ export class ReserveBoxDto {
   /**
    * DTO for reserving a surprise box for an order.
    * @property {number} surpriseBoxId - The ID of the surprise box to reserve.
-   * @property {number} customerId - The ID of the customer making the reservation.
    * @property {number} [reservationMinutes] - Optional number of minutes to reserve the box, defaults to 5 minutes.
    */
   @ApiProperty({
@@ -18,17 +17,17 @@ export class ReserveBoxDto {
   @IsNumber()
   surpriseBoxId: number;
 
-  @ApiProperty({
+/*  @ApiProperty({
     description: 'The ID of the customer making the reservation',
     example: 123,
     type: Number
   })
   @IsNotEmpty()
   @IsNumber()
-  customerId: number;
+  customerId: number;*/
 
   @ApiProperty({
-    description: 'Number of minutes to reserve the box',
+    description: 'Number of minutes to reserve the box (max 15, default is 5)',
     example: 5,
     default: 5,
     required: false,
@@ -36,5 +35,6 @@ export class ReserveBoxDto {
   })
   @IsOptional()
   @IsNumber()
+  @Max(15, { message: 'Reservation minutes cannot exceed 15' })
   reservationMinutes?: number = ReserveBoxDto.RESERVATION_MINUTES;
 }

@@ -68,17 +68,18 @@ export class SurpriseBoxService {
   /**
    * Зарезервировать бокс для заказа
    */
-  async reserveBox(reserveBoxDto: ReserveBoxDto): Promise<OperationResult<{expiresAt: string}>> {
-    this.logger.log('Starting box reservation process', 'BaseSurpriseBoxService', {
+  async reserveBox(reserveBoxDto: ReserveBoxDto, customerId: number): Promise<OperationResult<{expiresAt: string}>> {
+    this.logger.log('Starting box reservation process', 'SurpriseBoxService', {
       boxId: reserveBoxDto.surpriseBoxId,
-      customerId: reserveBoxDto.customerId
+      customerId: customerId
     });
 
     if (!reserveBoxDto.surpriseBoxId || reserveBoxDto.surpriseBoxId <= 0) {
       throw new BadRequestException('Valid surprise box ID is required');
     }
 
-    if (!reserveBoxDto.customerId || reserveBoxDto.customerId <= 0) {
+    if (!customerId || customerId <= 0) {
+      console.log({customerId})
       throw new BadRequestException('Valid customer ID is required');
     }
 
@@ -86,19 +87,19 @@ export class SurpriseBoxService {
       throw new BadRequestException('Valid reservation minutes is required');
     }
 
-    const result = await this.surpriseBoxRepository.reserveBoxAtomic(reserveBoxDto);
+    const result = await this.surpriseBoxRepository.reserveBoxAtomic(reserveBoxDto, customerId);
 
     if (result.success) {
       this.logger.log('Box reservation completed successfully', 'BaseSurpriseBoxService', {
         boxId: reserveBoxDto.surpriseBoxId,
-        customerId: reserveBoxDto.customerId,
+        customerId: customerId,
         expiresAt: result.data?.expiresAt
       });
     } else {
       // TODO: change to error level
       this.logger.warn('Box reservation failed', 'BaseSurpriseBoxService', {
         boxId: reserveBoxDto.surpriseBoxId,
-        customerId: reserveBoxDto.customerId,
+        customerId: customerId,
         reason: result.message
       });
     }

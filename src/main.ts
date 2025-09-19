@@ -51,7 +51,7 @@ async function bootstrap() {
       .addBearerAuth()
       .addTag('Store Authentication', 'Employee authentication endpoints')
       .addTag('Customer Authentication', 'Customer authentication endpoints')
-      .addTag('Orders', 'Order management endpoints')
+      // .addTag('Orders', 'Order management endpoints')
       // .addTag('Customers', 'Customer management endpoints')
       // .addTag('Stores', 'Store management endpoints')
       // .addTag('Categories', 'Category management endpoints')

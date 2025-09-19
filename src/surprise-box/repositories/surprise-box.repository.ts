@@ -53,10 +53,10 @@ export class SurpriseBoxRepository {
   /**
    * Вызов атомарной функции резервирования
    */
-  async reserveBoxAtomic(reserveBoxDto: ReserveBoxDto): Promise<OperationResult<{expiresAt: string}>> {
+  async reserveBoxAtomic(reserveBoxDto: ReserveBoxDto, customerId: number): Promise<OperationResult<{expiresAt: string}>> {
     this.logger.debug('Executing reserve_surprise_box_atomic function', 'SurpriseBoxRepository', {
       boxId: reserveBoxDto.surpriseBoxId,
-      customerId: reserveBoxDto.customerId,
+      customerId: customerId,
       reservationMinutes: reserveBoxDto.reservationMinutes
     });
 
@@ -64,7 +64,7 @@ export class SurpriseBoxRepository {
       'SELECT * FROM reserve_surprise_box_atomic($1, $2, $3)',
       [
         reserveBoxDto.surpriseBoxId,
-        reserveBoxDto.customerId,
+        customerId,
         reserveBoxDto.reservationMinutes,
       ]
     );
@@ -74,7 +74,7 @@ export class SurpriseBoxRepository {
     this.logger.debug('Database function executed', 'SurpriseBoxRepository', {
       success: queryResult.success,
       boxId: reserveBoxDto.surpriseBoxId,
-      customerId: reserveBoxDto.customerId,
+      customerId: customerId,
       expiresAt: queryResult.data?.expiresAt
     });
 

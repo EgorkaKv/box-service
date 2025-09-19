@@ -7,7 +7,7 @@ import { OrderResponseDto } from "@order/dto/order-response.dto";
 import { EmployeeOrderService } from "@order/services/employee-order.service";
 import { OrderFilterDto } from "@order/dto/order-filter.dto";
 import { StoreOrderOwnershipGuard } from '../guards/order-ownership.guard';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags, ApiParam, ApiQuery, ApiBody } from "@nestjs/swagger";
 
 /**
  * Интерфейс для работника из JWT
@@ -45,11 +45,19 @@ export class StoreOrderController {
   @UseGuards(EmployeeJwtAuthGuard, StoreOrderOwnershipGuard)
   @ApiOperation({
     summary: 'Complete order by store employee',
-    description: 'Mark an order as completed using pickup code verification'
+    description: 'Mark an order as completed using pickup code verification. Employee can only complete orders for their store.'
   })
-  @ApiResponse({ status: 200, description: 'Order completed successfully' })
+  @ApiBody({
+    type: CompleteOrderDto,
+    description: 'Order completion details including order ID and pickup code'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Order completed successfully'
+  })
   @ApiResponse({ status: 400, description: 'Invalid pickup code or order data' })
-  @ApiResponse({ status: 403, description: 'Access denied to this order' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing authentication token' })
+  @ApiResponse({ status: 403, description: 'Access denied to this order - order does not belong to your store' })
   @ApiResponse({ status: 404, description: 'Order not found' })
   async completeOrder(
     @Req() req: RequestWithEmployee,
@@ -78,14 +86,56 @@ export class StoreOrderController {
   @UseGuards(EmployeeJwtAuthGuard)
   @ApiOperation({
     summary: 'Get store orders',
-    description: 'Retrieve paginated list of orders for the employee\'s store'
+    description: 'Retrieve paginated list of orders for the employee\'s store with optional filtering'
+  })
+  @ApiQuery({
+    name: 'page',
+    description: 'Page number for pagination',
+    required: false,
+    type: Number,
+    example: 1
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Number of items per page',
+    required: false,
+    type: Number,
+    example: 10
+  })
+  @ApiQuery({
+    name: 'status',
+    description: 'Filter by order status',
+    required: false,
+    enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'REFUNDED']
+  })
+  @ApiQuery({
+    name: 'orderDateFrom',
+    description: 'Filter orders from this date',
+    required: false,
+    type: String,
+    format: 'date-time'
+  })
+  @ApiQuery({
+    name: 'orderDateTo',
+    description: 'Filter orders until this date',
+    required: false,
+    type: String,
+    format: 'date-time'
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    description: 'Field to sort by',
+    required: false,
+    enum: ['orderDate', 'status', 'id'],
+    example: 'orderDate'
   })
   @ApiResponse({
     status: 200,
     description: 'Store orders retrieved successfully',
     type: PaginatedResponseDto<OrderResponseDto>
   })
-  @ApiResponse({ status: 403, description: 'Access denied' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing authentication token' })
+  @ApiResponse({ status: 403, description: 'Access denied - employee authentication required' })
   async getStoreOrders(
     @Req() req: RequestWithEmployee,
     @Query() filters: OrderFilterDto
@@ -108,15 +158,22 @@ export class StoreOrderController {
   @UseGuards(EmployeeJwtAuthGuard)
   @ApiOperation({
     summary: 'Find order by pickup code',
-    description: 'Retrieve order details using pickup code for order completion'
+    description: 'Retrieve order details using pickup code for order completion. Only returns orders for the employee\'s store.'
+  })
+  @ApiParam({
+    name: 'pickupCode',
+    description: 'Pickup code provided by customer',
+    type: String,
+    example: 'ABC123'
   })
   @ApiResponse({
     status: 200,
     description: 'Order found successfully',
     type: OrderResponseDto
   })
-  @ApiResponse({ status: 404, description: 'Order not found with this pickup code' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing authentication token' })
   @ApiResponse({ status: 403, description: 'Order does not belong to your store' })
+  @ApiResponse({ status: 404, description: 'Order not found with this pickup code' })
   async findOrderByPickupCode(
     @Req() req: RequestWithEmployee,
     @Param('pickupCode') pickupCode: string

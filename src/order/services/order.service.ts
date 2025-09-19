@@ -27,14 +27,14 @@ export class OrderService {
   /**
    * Резервирование бокса для заказа
    */
-  async reserveBox(reserveBoxDto: ReserveBoxDto): Promise<{ expiresAt: string | null }> {
+  async reserveBox(reserveBoxDto: ReserveBoxDto, customerId: number): Promise<{ expiresAt: string | null }> {
     this.logger.log('Starting box reservation process', 'OrderService');
-    const result = await this.surpriseBoxService.reserveBox(reserveBoxDto);
+    const result = await this.surpriseBoxService.reserveBox(reserveBoxDto, customerId);
 
     if (!result.success) {
       this.logger.debug('Box reservation failed', 'OrderService', {
         boxId: reserveBoxDto.surpriseBoxId,
-        customerId: reserveBoxDto.customerId,
+        customerId: customerId,
         message: result.message
       });
 
@@ -53,7 +53,7 @@ export class OrderService {
 
     this.logger.log('Box reservation completed successfully', 'OrderService', {
       boxId: reserveBoxDto.surpriseBoxId,
-      customerId: reserveBoxDto.customerId,
+      customerId: customerId,
       expiresAt: result.data?.expiresAt
     });
 
