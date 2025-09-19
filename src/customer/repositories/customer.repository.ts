@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Customer } from '../entities/customer.entity';
-import { AppLogger } from '@common/logger/app-logger.service';
+import {Injectable} from '@nestjs/common';
+import {InjectRepository} from '@nestjs/typeorm';
+import {Repository} from 'typeorm';
+import {Customer} from '../entities/customer.entity';
+import {AppLogger} from '@common/logger/app-logger.service';
+import {CustomerRegisterDto} from "@auth/dto/customer-register.dto";
 
 @Injectable()
 export class CustomerRepository {
@@ -112,21 +113,29 @@ export class CustomerRepository {
     return savedCustomer;
   }
 
-  async validatePassword(id: number, passwordHash: string): Promise<boolean> {
+  async validatePassword(id: number, password: string): Promise<boolean> {
     this.logger.debug('Validating customer password', 'CustomerRepository', { id });
 
     const customer = await this.customerRepository.findOne({
-      where: { id, passwordHash },
+      where: { id },
     });
 
-    const isValid = !!customer;
+    if (!customer) {
+      this.logger.debug('Customer not found during password validation', 'CustomerRepository', { id });
+      return false;
+    }
+
+    // проверяем хеши паролей
+    const bcrypt = require('bcrypt');
+    const isMatch = await bcrypt.compare(password, customer.passwordHash);
+
 
     this.logger.debug('Customer password validation completed', 'CustomerRepository', {
       id,
-      isValid
+      isMatch
     });
 
-    return isValid;
+    return isMatch
   }
 
   /**
@@ -144,26 +153,36 @@ export class CustomerRepository {
 
   /**
    * Создать клиента с email и паролем
-   * @param email
+   * @param registerDto
    * @param passwordHash
    */
-  async createWithEmailAndPassword(email: string, passwordHash: string): Promise<Customer> {
-    this.logger.debug('Creating customer with email and password', 'CustomerRepository', { email });
+  async createWithEmailAndPassword(registerDto: CustomerRegisterDto, passwordHash: string): Promise<Customer> {
+    this.logger.debug('Creating customer with email and password', 'CustomerRepository', { email: registerDto.email });
 
     const customer = this.customerRepository.create({
-      email,
-      passwordHash,
-      customerName: `Customer ${email}`, // Временное имя, можно будет изменить позже
+      email: registerDto.email,
+      passwordHash: passwordHash,
+      customerName: registerDto.customerName ?? `Customer ${registerDto.email}`,
+      // FIXME: исправить добавление необязательных полей
+      // ...(registerDto.customerName && { customerName: registerDto.customerName }),
+      // gender: registerDto?.gender,
+      // ...(registerDto.profileImageUrl && { profileImageUrl: registerDto.profileImageUrl }),
       lastLogin: new Date(),
     });
 
     const savedCustomer = await this.customerRepository.save(customer);
 
     this.logger.debug('Customer created with email and password', 'CustomerRepository', {
-      email,
+      email: registerDto.email,
       customerId: savedCustomer.id
     });
 
     return savedCustomer;
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    const bcrypt = require('bcrypt');
+    const saltRounds = 10;
+    return await bcrypt.hash(password, saltRounds);
   }
 }

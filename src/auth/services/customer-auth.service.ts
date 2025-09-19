@@ -130,6 +130,7 @@ export class CustomerAuthService {
     // Ищем клиента по email или телефону
     let customer: Customer | null = null;
     if (loginDto.login.includes('@')) {
+      console.log('findByEmail', loginDto.login);
       customer = await this.customerRepository.findByEmail(loginDto.login);
     } else {
       customer = await this.customerRepository.findByPhone(loginDto.login);
@@ -185,8 +186,11 @@ export class CustomerAuthService {
       throw new BadRequestException('Email already in use');
     }
 
+    // хешируем пароль
+    const hashedPassword = await this.customerRepository.hashPassword(registerDto.password);
+
     // Создаем нового клиента
-    const customer = await this.customerRepository.createWithEmailAndPassword(registerDto.email, registerDto.password);
+    const customer = await this.customerRepository.createWithEmailAndPassword(registerDto, hashedPassword);
 
     // Создаем типизированный payload для customer
     const payload: CustomerJwtPayload = {
