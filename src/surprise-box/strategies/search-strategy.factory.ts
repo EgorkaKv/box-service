@@ -69,8 +69,8 @@ export class SearchStrategyFactory {
       filters !== null &&
       'latitude' in filters &&
       'longitude' in filters &&
-      typeof filters.latitude === 'number' &&
-      typeof filters.longitude === 'number'
+      !isNaN(Number(filters.latitude)) &&
+      !isNaN(Number(filters.longitude))
     );
   }
 
