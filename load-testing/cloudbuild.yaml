@@ -17,10 +17,6 @@ steps:
       - '--all-tags'
       - 'europe-central2-docker.pkg.dev/$PROJECT_ID/load-test-box-service-1/load-test-bs'
 
-# Только срабатывает при изменениях в папке load-testing
-includedFiles:
-  - 'load-testing/**'
-
 options:
   logging: CLOUD_LOGGING_ONLY
 
